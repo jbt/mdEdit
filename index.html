@@ -4,8 +4,26 @@
   <script src="prism.js"></script>
   <script src="jquery.js"></script>
   <script src="selection.js"></script>
-  <script src="prism-markdown.js"></script>
+  <script src="prism-md.js"></script>
   <link rel="stylesheet" href="prism.css">
+  <style>
+
+  .token.heading { font-weight: bold; }
+  .token.heading .heading-hash { font-weight: normal; }
+  .token.heading .heading-setext-line { font-weight: normal; }
+  .token.heading.heading-1 { font-size: 2em; }
+  .token.heading.heading-2 { font-size: 1.75em; }
+  .token.heading.heading-3 { font-size: 1.5em; }
+  .token.heading.heading-4 { font-size: 1.3em; }
+  .token.heading.heading-5 { font-size: 1.2em; }
+  .token.heading.heading-6 { font-size: 1.15em; }
+  .token.marker { color: rgba(60,60,60,0.3); }
+  .token.strong-inner { font-weight: bold; }
+  .token.em-inner { font-style: italic; }
+  .token.strike-inner { text-decoration: line-through }
+  .token.code { background: rgba(60,60,60,0.1); padding: 0.15em 0; }
+
+  </style>
 </head>
 <body>
 
@@ -13,16 +31,205 @@
 
 # H1
 
-Hi there
-
 ## H2
 
- * list
- * list
- * list
+### H3
 
-**strong** stuff.
+#### H4
 
+##### H5
+
+##### H6
+
+## H2 with trailing hashes ##
+
+
+
+  ### H3 with some leading space
+
+
+     # H1 indented too far
+
+
+seText-style H1
+======
+
+
+
+seText-style H2
+------
+
+
+  unaligned H1
+=
+
+
+unaligned h2
+  --
+
+
+h1 indented too far
+     =
+
+
+
+
+not an hr:
+
+===
+
+
+this is an hr:
+
+***
+
+and this:
+
+---
+
+and this:
+
+___
+
+
+and this:
+
+ *    *  * * ** **
+
+not this:
+
+ * _ *
+
+
+
+
+**strong** stuff
+
+__strong
+stuff__
+
+
+**not strong
+
+stuff**
+
+
+
+
+Here is some _emphatic_ stuff
+
+
+*emphatic
+stuff I say!*
+
+
+_not
+
+very emphatic_
+
+
+
+
+
+
+Here is a **strong, *emphatic* thing**.
+
+And **another *one***
+
+And ***another one!***
+
+And **_this_ one too**
+
+And __this *one*__
+
+This __is **silly though**__
+
+
+Here is an _emphatic, **strong** thing_
+
+And _another __one___
+
+And *another **one***
+
+
+~~deleted stuff~~
+
+
+ * list
+ * listy
+ * listy
+
+ 1. num
+ *  bered
+ *  lists
+    moar
+ *  blah
+
+
+ * **formatting** _in_ ~~lists~~ please with `code` and stuff
+   * nesting?
+   * maybe
+   * too?
+
+
+
+`code`
+
+Lots of text with `code` in it
+
+Code `has no *stuff inside it*`.
+
+# Even `headings` can have code _and other_ **things**
+
+
+
+
+
+[link](aaaa)
+
+[link](&lt;aaa&gt;)
+
+[link](aaaa "title")
+
+[link](aaaa(foo) "tit\"le")
+
+[link](&lt;blahblah&gt; 'som"e"thing')
+
+
+![IMAGE](image)
+
+![IMAGE](&lt;aaa&gt;)
+
+![IMAGE](aaaa "title")
+
+![IMAGE](aaaa(foo) "tit\"le")
+
+![IMAGE](&lt;blahblah&gt; 'som"e"thing')
+
+
+
+
+
+
+
+
+
+
+
+
+
+---
+Still to do:
+
+ * links
+ * images
+ * footnotes
+ * link references / defs
+ * image references / defs
+ * blockquote
+ * fenced
+ * fenced with language
+ * embedded html
 </pre>
 
 <script>
@@ -141,7 +348,7 @@ function action(act, opts){
 }
 
 var actions = {
-  newline: function(state, options){
+  newline: function(state, options){//NB leading newline goes weird
     var s = state.start;
     state.before += '\n';
 
@@ -154,6 +361,9 @@ var actions = {
     return { add: '\n', del: sel, start: s };
   }
 };
+
+
+el.onkeyup();
 
 </script>
 
