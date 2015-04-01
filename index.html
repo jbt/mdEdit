@@ -258,20 +258,63 @@ agan
   * blockquote
   * omg
 
+
+
+[refdef]: /blah "title"
+
+[def2]:
+  /blah
+  "title"
+
+
+
+[link][withRef]
+
+[link] [with other ref]
+
+![img][withref]
+
+![img] [withotherref]
+
+
+[shortcut]
+
+
+[shortcut **can have stuff in it**]
+
+[shortcut **can have stuff in it**]: /ref "can't though"
+
+
+![img shortcut]
+
+
+```
+CODE BLOK
+```
+
+    indented
+    code is da
+    best
+
+
+
 ---
 Still to do:
 
  * footnotes
- * link references / defs
- * image references / defs
- * fenced
- * fenced with language
+ * fenced with language and highlight
  * embedded html
 
 
 Bigger stuff:
 
  * Tweak Prism for a better concept of ordering and precedence
+ * Undo manager
+ * Lots of actions
+ * Redo *-inner matches to be better
+ * Sections?
+ * urldef linkText / linkLabel?
+ * prevent escaped links
 </pre>
 
 <script>
