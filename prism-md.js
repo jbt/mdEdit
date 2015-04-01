@@ -7,6 +7,13 @@ Prism.languages.md = (function(){
     return out;
   }
 
+  function merge(into){
+    for(var i = 1; i < arguments.length; i += 1){
+      var o = arguments[i];
+      for(var j in o) into[j] = o[i];
+    }
+  }
+
 
 
   md['heading setext-heading heading-1'] = {
@@ -48,11 +55,21 @@ Prism.languages.md = (function(){
     }
   };
 
+  md.blockquote = {
+    pattern: /^[\t ]*>[\t ]?.+(?:\n(?!\n)|.)*/gm,
+    inside: {
+      'marker quote-marker': /^[\t ]*>[\t ]?/gm,
+      'blockquote-content': {
+        pattern: /[^>]+/
+      }
+    }
+  };
+
   md.list = {
     pattern: /^[\t ]*([*+\-]|\d+\.)[\t ].+(?:\n(?!\n)|.)*/gm,
     inside: {
       li: {
-        pattern: /^[\t ]*([*+\-]|\d+\.)[\t ].+(?:\n|[ \t]?[^*+\-].*\n)*/gm,
+        pattern: /^[\t ]*([*+\-]|\d+\.)[\t ].+(?:\n|[ \t]+[^*+\- \t].*\n)*/gm,
         inside: {
           'marker list-item': /^[ \t]*([*+\-]|\d+\.)[ \t]/m
         }
@@ -66,7 +83,7 @@ Prism.languages.md = (function(){
     lookbehind: true,
     inside: {
       'code-inner': {
-        pattern: /^(`).*(?=`$)/,
+        pattern: /^(`)(.|\s)*(?=`$)/,
         lookbehind: true
       },
       'marker code-marker start': /^`/,
@@ -75,11 +92,23 @@ Prism.languages.md = (function(){
   };
 
   var linkText = {
-    pattern: /^!?\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\]/,
+    pattern: /^\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\]/,
+    inside: {
+      'link-text-inner': {
+        pattern: /^(\[)(.|\s)*?(?=\]$)/,
+        lookbehind: true
+      },
+      'marker bracket start': /^\[/,
+      'marker bracket end': /\]$/
+    }
+  };
+
+  var imageText = {
+    pattern: /^!\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\]/,
     inside: {
       'marker image-bang': /^!/,
-      'link-text-inner': {
-        pattern: /^(\[).*?(?=\]$)/,
+      'image-text-inner': {
+        pattern: /^(\[)(.|\s)*?(?=\]$)/,
         lookbehind: true
       },
       'marker bracket start': /^\[/,
@@ -88,16 +117,16 @@ Prism.languages.md = (function(){
   };
 
   var linkURL = {
-    pattern: /^(\s*)(?!<)(?:\\.|[^\(\)]|\([^\(\)]*\))*/,
-    lookbehind: true
+    pattern: /^(?!<)(?:\\.|[^\(\)\s]|\([^\(\)\s]*\))+/,
+    // lookbehind: true
   };
 
   var linkBracedURL = {
-    pattern: /^(\s*)<(?:[^<>]|\\.)*>/,
+    pattern: /^(\s*)<(?:\\.|[^<>])*>/,
     lookbehind: true,
     inside: {
-      'braced-url-inner': {
-        pattern: /^(<).*?(?=>$)/,
+      'braced-href-inner': {
+        pattern: /^(<)(.|\s)*?(?=>$)/,
         lookbehind: true,
       },
       'marker brace start': /^</,
@@ -106,11 +135,11 @@ Prism.languages.md = (function(){
   };
 
   var linkTitle = {
-    pattern: /(\s+)('(?:[^']|\\')+'|"(?:[^"]|\\")+")/,
+    pattern: /(\s+)('(?:\\'|[^'])+'|"(?:\\"|[^"])+")/,
     lookbehind: true,
     inside: {
       'title-inner': {
-        pattern: /^(['"]).*?(?=\1$)/,
+        pattern: /^(['"])(.|\s)*?(?=\1$)/,
         lookbehind: true,
       },
       'marker quote start': /^['"]/,
@@ -122,11 +151,11 @@ Prism.languages.md = (function(){
     pattern: /\(\s*(?:(?!<)(?:\\.|[^\(\)]|\([^\(\)]*\))*|<(?:[^<>]|\\.)*>)(\s+('(?:[^']|\\')+'|"(?:[^"]|\\")+"))?\s*\)/,
     inside: {
       'link-params-inner': {
-        pattern: /^(\().*?(?=\)$)/,
+        pattern: /^(\(\s*)(.|\n)*?(?=\s*\)$)/,
         lookbehind: true,
         inside: {
-          'url': linkURL,
-          'braced-url': linkBracedURL,
+          'href': linkURL,
+          'braced-href': linkBracedURL,
           'link-title': linkTitle
         }
       },
@@ -138,7 +167,7 @@ Prism.languages.md = (function(){
   md.image = {
     pattern: /!\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\]\(\s*(?:(?!<)(?:\\.|[^\(\)]|\([^\(\)]*\))*|<(?:[^<>]|\\.)*>)(\s+('(?:[^']|\\')+'|"(?:[^"]|\\")+"))?\s*\)/,
     inside: {
-      'link-text': linkText,
+      'link-text': imageText,
       'link-params': linkParams
     }
   };
@@ -158,7 +187,7 @@ Prism.languages.md = (function(){
     lookbehind: true,
     inside: {
       'strong-inner': {
-        pattern: /^(\*\*|__).*?(?=\1$)/,
+        pattern: /^(\*\*|__)(.|\s)*?(?=\1$)/,
         lookbehind: true
       },
       'marker strong-marker start': /^(\*\*|__)/,
@@ -172,7 +201,7 @@ Prism.languages.md = (function(){
 		lookbehind: true,
     inside: {
       'em-inner': {
-        pattern: /^(\*|_).*?(?=\1$)/,
+        pattern: /^(\*|_)(.|\s)*?(?=\1$)/,
         lookbehind: true
       },
       'marker em-marker start': /^(\*|_)/,
@@ -185,7 +214,7 @@ Prism.languages.md = (function(){
     lookbehind: true,
     inside: {
       'strike-inner': {
-        pattern: /^(~~).*(?=~~$)/,
+        pattern: /^(~~)(.|\s)*(?=~~$)/,
         lookbehind: true
       },
       'marker strike-marker start': /^~~/,
@@ -193,7 +222,7 @@ Prism.languages.md = (function(){
     }
   };
 
-  md.nl = /^\n$/gm;
+  // md.nl = /^\n$/gm;
 
 
 
@@ -207,8 +236,19 @@ Prism.languages.md = (function(){
     strong: md.strong,
     em: md.em,
     strike: md.strike,
-    code: md.code
+    code: md.code,
+    link: md.link,
+    image: md.image
   };
+
+  var blocks = {
+    list: md.list,
+    blockquote: md.blockquote
+  };
+  merge(blocks, inlines);
+
+  addInside(md.blockquote.inside['blockquote-content'], blocks);
+  addInside(md.list.inside.li/*.inside['list-item-inner']*/, blocks);
 
   for(var i = 1; i <= 6; i += 1){
     addInside(md['heading heading-'+i], inlines);
@@ -216,16 +256,24 @@ Prism.languages.md = (function(){
   addInside(md['heading setext-heading heading-1'], inlines);
   addInside(md['heading setext-heading heading-2'], inlines);
 
-  addInside(md.list.inside.li/*.inside['list-item-inner']*/, inlines);
   addInside(md.strike.inside['strike-inner'], inlines);
 
 
+  var linkInlines = shallowClone(inlines);
+  delete linkInlines.link;
+  addInside(linkText.inside['link-text-inner'], linkInlines);
+
+  var imgInlines = shallowClone(linkInlines);
+  delete imgInlines.image;
+  addInside(imageText.inside['image-text-inner'], imgInlines);
+
+
   // Nesting em and strong goes a bit mental :( this is best I can manage
-  inlines = shallowClone(inlines);
-  delete inlines.em;
-  delete inlines.strong;
-  addInside(md.strong.inside['strong-inner'], inlines);
-  addInside(md.em.inside['em-inner'], inlines);
+  var emInlines = shallowClone(inlines);
+  delete emInlines.em;
+  delete emInlines.strong;
+  addInside(md.strong.inside['strong-inner'], emInlines);
+  addInside(md.em.inside['em-inner'], emInlines);
 
   md.strong.inside['strong-inner'].inside.em = md.em;
   md.em.inside['em-inner'].inside.strong = md.strong;

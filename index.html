@@ -17,11 +17,28 @@
   .token.heading.heading-4 { font-size: 1.3em; }
   .token.heading.heading-5 { font-size: 1.2em; }
   .token.heading.heading-6 { font-size: 1.15em; }
-  .token.marker { color: rgba(60,60,60,0.3); }
-  .token.strong-inner { font-weight: bold; }
-  .token.em-inner { font-style: italic; }
+  .token.marker { color: rgba(120,120,120,0.5); }
+  .token.strong { font-weight: bold; }
+  .token.em { font-style: italic; }
   .token.strike-inner { text-decoration: line-through }
-  .token.code { background: rgba(60,60,60,0.1); padding: 0.15em 0; }
+  .token.code { background: rgba(120,120,120,0.1); padding: 0.15em 0; }
+  .token.href, .token.braced-href .braced-href-inner { color: rgba(120,120,120,0.8); }
+  .token.blockquote-content { color: #555; }
+
+  /* nice debugging styles */
+  /*.token {
+    border: 1px solid red;
+    padding: 10px;
+  }
+  .token>.token { padding: 8px }
+  .token>.token>.token { padding: 6px }
+  .token>.token>.token>.token { padding: 4px }
+  .token>.token>.token>.token>.token { padding: 2px }
+  .token>.token>.token>.token>.token>.token { padding: 0px }*/
+  /*.token:before {
+    content: attr(class);
+    font-size: 0.1em;
+  }*/
 
   </style>
 </head>
@@ -208,28 +225,53 @@ Code `has no *stuff inside it*`.
 
 
 
+[link **with** _somme_ `formatting`](foo)
+
+![image **with** _some_ `formatting`](bar)
+
+
+This probably won't work:
+
+[link with ![an image](foo)](bar)
 
 
 
+> blockquote
 
 
 
+> blockquote
+> long
+> long
+> blockquote
 
+> blockquote
+  with
+  lazy
+coninutation
+> and picking
+> back up
+agan
 
-
+> * list
+  * inside
+  * blockquote
+  * omg
 
 ---
 Still to do:
 
- * links
- * images
  * footnotes
  * link references / defs
  * image references / defs
- * blockquote
  * fenced
  * fenced with language
  * embedded html
+
+
+Bigger stuff:
+
+ * Tweak Prism for a better concept of ordering and precedence
 </pre>
 
 <script>
@@ -238,8 +280,7 @@ var el = $('pre')[0];
 
 el.onkeyup = function(evt){
   var keyCode = evt && evt.keyCode || 0,
-      code = this.textContent,
-      $t = $(this);
+      code = this.textContent;
 
   if(keyCode < 9 || keyCode == 13 || keyCode > 32 && keyCode < 41) {
     // $t.trigger('caretmove');
@@ -261,20 +302,25 @@ el.onkeyup = function(evt){
     // $t.trigger('contentchange', {
     //   keyCode: keyCode
     // });
+    this.oninput();
+  }
+};
 
-    var ss = this.selectionStart,
-      se = this.selectionEnd;
+el.oninput = function(evt){
+  var code = this.textContent;
 
-    Prism.highlightElement(this);
+  var ss = this.selectionStart,
+    se = this.selectionEnd;
 
-    // Dirty fix to #2
-    if(!/\n$/.test(code)) {
-      this.innerHTML = this.innerHTML + '\n';
-    }
+  Prism.highlightElement(this);
 
-    if(ss !== null || se !== null) {
-      this.setSelectionRange(ss, se);
-    }
+  // Dirty fix to #2
+  if(!/\n$/.test(code)) {
+    this.innerHTML = this.innerHTML + '\n';
+  }
+
+  if(ss !== null || se !== null) {
+    this.setSelectionRange(ss, se);
   }
 };
 
