@@ -1,5 +1,7 @@
 Prism.languages.md = (function(){
-  var md = {};
+  var md = {
+    comment: Prism.languages.markup.comment
+  };
 
   function shallowClone(obj){
     var out = {};
@@ -23,21 +25,52 @@ Prism.languages.md = (function(){
   function block(name, def){
     blocks[name] = md[name] = def;
   }
-  function leafBlock(name, def){
-    md[name] = def;
+
+
+  var langAliases = {
+    markup: [ 'markup', 'html', 'xml' ],
+    javascript: [ 'javascript', 'js' ]
+  };
+
+  for(var i in Prism.languages){
+    if(!Prism.languages.hasOwnProperty(i)) continue;
+    var l = Prism.languages[i];
+    if(typeof l === 'function') continue;
+
+    var aliases = langAliases[i];
+    var matches = aliases ? aliases.join('|') : i;
+
+    block('code-block fenced ' + i, {
+      pattern: new RegExp('(^ {0,3}|\\n {0,3})(([`~])\\3\\3) *(' + matches + ')( [^`\n]*)? *\\n(?:[\\s\\S]*?)\\n {0,3}(\\2\\3*(?= *\\n)|$)', 'gi'),
+      lookbehind: true,
+      inside: {
+        'code-language': {
+          pattern: /(^([`~])\2+)((?!\2)[^\2\n])+/,
+          lookbehind: true
+        },
+        'marker code-fence start': /^([`~])\1+/,
+        'marker code-fence end': /([`~])\1+$/,
+        'code-inner': {
+          pattern: /(^\n)[\s\S]*(?=\n$)/,
+          lookbehind: true,
+          alias: 'language-' + i,
+          inside: l
+        }
+      }
+    });
   }
 
 
-  leafBlock('code-block fenced', {
-    pattern: /(^ {0,3}|\n {0,3})(`{3,})[^`\n]*\n(?:[\s\S]*?)\n {0,3}(\2`*(?= *\n)|$)/g,
+  block('code-block fenced', {
+    pattern: /(^ {0,3}|\n {0,3})(([`~])\3\3)[^`\n]*\n(?:[\s\S]*?)\n {0,3}(\2\3*(?= *\n)|$)/g,
     lookbehind: true,
     inside: {
       'code-language': {
-        pattern: /(^`+)[^`\n]+/,
+        pattern: /(^([`~])\2+)((?!\2)[^\2\n])+/,
         lookbehind: true
       },
-      'marker code-fence start': /^`+/,
-      'marker code-fence end': /`+$/,
+      'marker code-fence start': /^([`~])\1+/,
+      'marker code-fence end': /([`~])\1+$/,
       'code-inner': {
         pattern: /(^\n)[\s\S]*(?=\n$)/,
         lookbehind: true
@@ -46,7 +79,7 @@ Prism.languages.md = (function(){
   });
 
 
-  leafBlock('heading setext-heading heading-1', {
+  block('heading setext-heading heading-1', {
     pattern: /^ {0,3}[^\s].*\n {0,3}=+[ \t]*$/gm,
     inside: {
       'marker heading-setext-line': {
@@ -57,7 +90,7 @@ Prism.languages.md = (function(){
     }
   });
 
-  leafBlock('heading setext-heading heading-2', {
+  block('heading setext-heading heading-2', {
     pattern: /^ {0,3}[^\s].*\n {0,3}-+[ \t]*$/gm,
     inside: {
       'marker heading-setext-line': {
@@ -74,7 +107,7 @@ Prism.languages.md = (function(){
     rest: inlines
   };
   for(var i = 1; i <= 6; i += 1){
-    leafBlock('heading heading-'+i, {
+    block('heading heading-'+i, {
       pattern: new RegExp('^ {0,3}#{'+i+'}(?!#).*$', 'gm'),
       inside: headingInside
     });
@@ -172,14 +205,14 @@ Prism.languages.md = (function(){
 
 
 
-  leafBlock('hr', {
+  block('hr', {
     pattern: /^[\t ]*([*\-_])([\t ]*\1){2,}([\t ]*$)/gm,
     inside: {
       'marker hr-marker': /[*\-_]/g
     }
   });
 
-  leafBlock('urldef', {
+  block('urldef', {
     pattern: /^( {0,3})\[(?:\\.|[^\]])+]: *\n? *(?:(?!<)(?:\\.|[^\(\)\s]|\([^\(\)\s]*\))*|<(?:[^<>\n]|\\.)*>)( *\n? *('(?:\\'|[^'])+'|"(?:\\"|[^"])+"))?$/gm,
     lookbehind: true,
     inside: {
@@ -215,9 +248,14 @@ Prism.languages.md = (function(){
     }
   });
 
-  leafBlock('code-block', {
+  block('code-block', {
     pattern: /(^|(?:^|(?:^|\n)(?![ \t]*([*+\-]|\d+\.)[ \t]).*\n)\s*?\n)((?: {4}|\t).*(?:\n|$))+/g,
     lookbehind: true
+  });
+
+  block('p', {
+    pattern: /.+/g,
+    inside: inlines
   });
 
   inline('image', {
@@ -325,7 +363,7 @@ Prism.languages.md = (function(){
 
   // md.nl = /^\n$/gm;
 
-
+/*
 
   function addInside(wat, def){
     if(!wat.inside) wat.inside = {};
@@ -384,6 +422,10 @@ Prism.languages.md = (function(){
   md.em.inside['em-inner'].inside.strong = md.strong;
 
 */
+
+  inline('comment', Prism.languages.markup.comment);
+  inline('tag', Prism.languages.markup.tag);
+  inline('entity', Prism.languages.markup.entity);
 
   return md;
 })();

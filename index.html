@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="prism.js"></script>
+  <script src="prism-all.js"></script>
   <script src="jquery.js"></script>
   <script src="selection.js"></script>
   <script src="prism-md.js"></script>
   <link rel="stylesheet" href="prism.css">
   <style>
+
+  pre {
+    font-size: 12px;
+    line-height: 1.3;
+  }
 
   .token.heading { font-weight: bold; }
   .token.heading .heading-hash { font-weight: normal; }
@@ -292,9 +297,34 @@ agan
 CODE BLOK
 ```
 
+
+~~~
+CODE BLOK
+~~~
+
     indented
     code is da
     best
+
+
+```html
+&lt;hi iam="some html">
+```
+
+~~~html
+&lt;hi iam="some html">
+~~~
+
+
+
+Righty
+
+&lt;table>
+  hi I am some html
+&lt;/table>
+
+
+## &lt;i class="foo bar">ok then&lt;/i> stuffs
 
 
 
@@ -302,9 +332,9 @@ CODE BLOK
 Still to do:
 
  * footnotes
- * fenced with language and highlight
- * embedded html
-
+ * emoji
+ * tables
+ * emails + urls
 
 Bigger stuff:
 
@@ -315,6 +345,9 @@ Bigger stuff:
  * Sections?
  * urldef linkText / linkLabel?
  * prevent escaped links
+ * think through linktext not allowing other links etc
+ * fancy caret (maybe)
+
 </pre>
 
 <script>
@@ -355,12 +388,13 @@ el.oninput = function(evt){
   var ss = this.selectionStart,
     se = this.selectionEnd;
 
-  Prism.highlightElement(this);
+  this.innerHTML = Prism.highlight(code, Prism.languages.md);
+  // Prism.highlightElement(this); // bit messy + unnecessary + strips leading newlines :(
 
   // Dirty fix to #2
-  if(!/\n$/.test(code)) {
-    this.innerHTML = this.innerHTML + '\n';
-  }
+  // if(!/\n$/.test(code)) {
+  //   this.innerHTML = this.innerHTML + '\n';
+  // }
 
   if(ss !== null || se !== null) {
     this.setSelectionRange(ss, se);
