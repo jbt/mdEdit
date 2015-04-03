@@ -118,25 +118,21 @@ var md = (function(){
   var linkText = {
     pattern: /^\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\]/,
     inside: {
-      'link-text-inner': {
-        pattern: /^(\[)(.|\s)*?(?=\]$)/,
-        lookbehind: true,
-        inside: inlines
-      },
       'marker bracket start': /^\[/,
-      'marker bracket end': /\]$/
+      'marker bracket end': /\]$/,
+      'link-text-inner': {
+        pattern: /[\w\W]+/,
+        inside: inlines
+      }
     }
   };
 
   var linkLabel = {
     pattern: /\[(?:\\.|[^\]])*\]/,
     inside: {
-      'link-label-inner': {
-        pattern: /^(\[)(.|\s)*?(?=\]$)/,
-        lookbehind: true
-      },
       'marker bracket start': /^\[/,
-      'marker bracket end': /\]$/
+      'marker bracket end': /\]$/,
+      'link-label-inner': /[\w\W]+/
     }
   };
 
@@ -144,13 +140,12 @@ var md = (function(){
     pattern: /^!\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\]/,
     inside: {
       'marker image-bang': /^!/,
-      'image-text-inner': {
-        pattern: /^(\[)(.|\s)*?(?=\]$)/,
-        lookbehind: true,
-        inside: inlines
-      },
       'marker bracket start': /^\[/,
-      'marker bracket end': /\]$/
+      'marker bracket end': /\]$/,
+      'image-text-inner': {
+        pattern: /[\w\W]+/,
+        inside: inlines
+      }
     }
   };
 
@@ -163,12 +158,9 @@ var md = (function(){
     pattern: /^(\s*)<(?:\\.|[^<>\n])*>/,
     lookbehind: true,
     inside: {
-      'braced-href-inner': {
-        pattern: /^(<)(.|\s)*?(?=>$)/,
-        lookbehind: true
-      },
       'marker brace start': /^</,
-      'marker brace end': />$/
+      'marker brace end': />$/,
+      'braced-href-inner': /[\w\W]+/
     }
   };
 
@@ -176,29 +168,25 @@ var md = (function(){
     pattern: /('(?:\\'|[^'])+'|"(?:\\"|[^"])+")\s*$/,
     // lookbehind: true,
     inside: {
-      'title-inner': {
-        pattern: /^(['"])(.|\s)*?(?=\1$)/,
-        lookbehind: true
-      },
       'marker quote start': /^['"]/,
-      'marker quote end': /['"]$/
+      'marker quote end': /['"]$/,
+      'title-inner': /[\w\W]+/
     }
   };
 
   var linkParams = {
     pattern: /\( *(?:(?!<)(?:\\.|[^\(\)\s]|\([^\(\)\s]*\))*|<(?:[^<>\n]|\\.)*>)( +('(?:[^']|\\')+'|"(?:[^"]|\\")+"))? *\)/,
     inside: {
+      'marker bracket start': /^\(/,
+      'marker bracket end': /\)$/,
       'link-params-inner': {
-        pattern: /^(\(\s*)(.|\n)*?(?=\s*\)$)/,
-        lookbehind: true,
+        pattern: /[\w\W]+/,
         inside: {
           'link-title': linkTitle,
           'href': linkURL,
           'braced-href': linkBracedURL
         }
-      },
-      'marker bracket start': /^\(/,
-      'marker bracket end': /\)$/
+      }
     }
   };
 
@@ -254,12 +242,13 @@ var md = (function(){
   });
 
   block('p', {
-    pattern: /.+/g,
+    pattern: /[^\n](?:\n(?!\n)|.)*[^\n]/g,
     inside: inlines
   });
 
   inline('image', {
-    pattern: /!\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\]\(\s*(?:(?!<)(?:\\.|[^\(\)\s]|\([^\(\)\s]*\))*|<(?:[^<>\n]|\\.)*>)(\s+('(?:[^']|\\')+'|"(?:[^"]|\\")+"))?\s*\)/,
+    pattern: /(^|[^\\])!\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\]\(\s*(?:(?!<)(?:\\.|[^\(\)\s]|\([^\(\)\s]*\))*|<(?:[^<>\n]|\\.)*>)(\s+('(?:[^']|\\')+'|"(?:[^"]|\\")+"))?\s*\)/,
+    lookbehind: true,
     inside: {
       'link-text': imageText,
       'link-params': linkParams
@@ -267,7 +256,8 @@ var md = (function(){
   });
 
   inline('link', {
-    pattern: /\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\]\(\s*(?:(?!<)(?:\\.|[^\(\)\s]|\([^\(\)\s]*\))*|<(?:[^<>\n]|\\.)*>)(\s+('(?:[^']|\\')+'|"(?:[^"]|\\")+"))?\s*\)/,
+    pattern: /(^|[^\\])\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\]\(\s*(?:(?!<)(?:\\.|[^\(\)\s]|\([^\(\)\s]*\))*|<(?:[^<>\n]|\\.)*>)(\s+('(?:[^']|\\')+'|"(?:[^"]|\\")+"))?\s*\)/,
+    lookbehind: true,
     inside: {
       'link-text': linkText,
       'link-params': linkParams
@@ -275,14 +265,16 @@ var md = (function(){
   });
 
   inline('image image-ref', {
-    pattern: /!\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\] ?\[(?:\\.|[^\]])*\]/,
+    pattern: /(^|[^\\])!\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\] ?\[(?:\\.|[^\]])*\]/,
+    lookbehind: true,
     inside: {
       'link-text': imageText,
       'link-label': linkLabel
     }
   });
   inline('link link-ref', {
-    pattern: /\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\] ?\[(?:\\.|[^\]])*\]/,
+    pattern: /(^|[^\\])\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\] ?\[(?:\\.|[^\]])*\]/,
+    lookbehind: true,
     inside: {
       'link-text': linkText,
       'link-label': linkLabel
@@ -290,14 +282,16 @@ var md = (function(){
   });
 
   inline('image image-ref shortcut-ref', {
-    pattern: /!\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\]/,
+    pattern: /(^|[^\\])!\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\]/,
+    lookbehind: true,
     inside: {
       'marker image-bang': /^!/,
       'link-text': linkText
     }
   });
   inline('link link-ref shortcut-ref', {
-    pattern: /\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\]/,
+    pattern: /(^|[^\\])\[(?:\\.|[^\[\]]|\[[^\[\]]*\])*\]/,
+    lookbehind: true,
     inside: {
       'link-text': linkText
     }
@@ -308,56 +302,50 @@ var md = (function(){
     pattern: /(^|[^\\])(`+)([^\r]*?[^`])\2(?!`)/g,
     lookbehind: true,
     inside: {
-      'code-inner': {
-        pattern: /^(`)(.|\s)*(?=`$)/,
-        lookbehind: true
-      },
       'marker code-marker start': /^`/,
-      'marker code-marker end': /`$/
+      'marker code-marker end': /`$/,
+      'code-inner': /[\w\W]+/
     }
   });
 
   inline('strong', {
-    pattern: /(^|[^\\*_])([_\*])\2(?:\n(?!\n)|.)+?\2{2}(?!\2)/g,
+    pattern: /(^|[^\\*_]|\\[*_])([_\*])\2(?:\n(?!\n)|.)+?\2{2}(?!\2)/g,
     // pattern: /(^|[^\\])(\*\*|__)(?:\n(?!\n)|.)+?\2/,
     lookbehind: true,
     inside: {
-      'strong-inner': {
-        pattern: /^(\*\*|__)(.|\s)*?(?=\1$)/,
-        lookbehind: true,
-        inside: inlines
-      },
       'marker strong-marker start': /^(\*\*|__)/,
-      'marker strong-marker end': /(\*\*|__)$/
+      'marker strong-marker end': /(\*\*|__)$/,
+      'strong-inner': {
+        pattern: /[\w\W]+/,
+        inside: inlines
+      }
     }
   });
 
   inline('em', {
     // pattern: /(^|[^\\])(\*|_)(\S[^\2]*?)??[^\s\\]+?\2/g,
-    pattern: /(^|[^\\*_])(\*|_)(?:\n(?!\n)|.)+?\2(?!\2)/g,
+    pattern: /(^|[^\\*_]|\\[*_])(\*|_)(?:\n(?!\n)|.)+?\2(?!\2)/g,
 		lookbehind: true,
     inside: {
-      'em-inner': {
-        pattern: /^(\*|_)(.|\s)*?(?=\1$)/,
-        lookbehind: true,
-        inside: inlines
-      },
       'marker em-marker start': /^(\*|_)/,
-      'marker em-marker end': /(\*|_)$/
+      'marker em-marker end': /(\*|_)$/,
+      'em-inner': {
+        pattern: /[\w\W]+/,
+        inside: inlines
+      }
     }
   });
 
   inline('strike', {
-    pattern: /(^|\n|\W)(~~)(?=\S)([^\r]*?\S)\2/gm,
+    pattern: /(^|\n|(?!\\)\W)(~~)(?=\S)([^\r]*?\S)\2/gm,
     lookbehind: true,
     inside: {
-      'strike-inner': {
-        pattern: /^(~~)(.|\s)*(?=~~$)/,
-        lookbehind: true,
-        inside: inlines
-      },
       'marker strike-marker start': /^~~/,
-      'marker strike-marker end': /~~$/
+      'marker strike-marker end': /~~$/,
+      'strike-inner': {
+        pattern: /[\w\W]+/,
+        inside: inlines
+      }
     }
   });
 

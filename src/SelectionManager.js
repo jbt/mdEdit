@@ -40,15 +40,16 @@ SelectionManager.prototype.getEnd = function(){
 
 SelectionManager.prototype.setRange = function(start, end){
 	var range = document.createRange();
-	var offset = findOffset(this.elt, start);
-
-	range.setStart(offset.element, offset.offset);
-
+	var startOffset = findOffset(this.elt, start);
+	var endOffset = startOffset;
 	if(end && end !== start){
-		offset = findOffset(this.elt, end);
+		endOffset = findOffset(this.elt, end);
+	}{
+		scrollToCaret.call(this, endOffset.element, endOffset.offset);
 	}
 
-	range.setEnd(offset.element, offset.offset);
+	range.setStart(startOffset.element, startOffset.offset);
+	range.setEnd(endOffset.element, endOffset.offset);
 
 	var selection = getSelection();
 	selection.removeAllRanges();
@@ -56,6 +57,39 @@ SelectionManager.prototype.setRange = function(start, end){
 };
 
 
+
+var caret = document.createElement('span');
+caret.style.position = 'absolute';
+caret.innerHTML = '|';
+
+function scrollToCaret(el, offset){
+	var t = el.textContent;
+	var p = el.parentNode;
+	var before = t.slice(0, offset);
+	var after = t.slice(offset);
+
+	el.textContent = after;
+	var b4 = document.createTextNode(before);
+	p.insertBefore(caret, el);
+	p.insertBefore(b4, caret);
+
+	// caret.scrollIntoViewIfNeeded();
+	var tp = caret.offsetTop;
+	var h = caret.offsetHeight;
+	var ch = this.elt.offsetHeight;
+	var st = this.elt.scrollTop;
+
+	el.textContent = t;
+	p.removeChild(caret);
+	p.removeChild(b4);
+
+
+	if(tp - st < 0){
+		this.elt.scrollTop = tp;
+	}else if(tp - st + h > ch){
+		this.elt.scrollTop = tp + h - ch;
+	}
+}
 
 
 

@@ -1,5 +1,11 @@
 function Editor(el){
-  this.el = el;
+  if(el.tagName === 'PRE'){
+    this.el = el;
+  }else{
+    this.el = document.createElement('pre');
+    el.appendChild(this.el);
+  }
+  this.el.className = 'mdedit';
 
   this.selMgr = new SelectionManager(el);
   this.undoMgr = new UndoManager(this);
@@ -14,6 +20,14 @@ function Editor(el){
   this.changed();
 }
 
+Editor.prototype.setValue = function(val){
+  this.el.textContent = val;
+  this.changed();
+};
+
+Editor.prototype.getValue = function(){
+  return this.el.textContent;
+};
 
 Editor.prototype.keyup = function(evt){
   var keyCode = evt && evt.keyCode || 0,
