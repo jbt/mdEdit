@@ -2,19 +2,19 @@ var md = (function(){
   var md = {
     comment: Prism.languages.markup.comment
   };
-
-  function shallowClone(obj){
-    var out = {};
-    for(var i in obj) out[i] = obj[i];
-    return out;
-  }
-
-  function merge(into){
-    for(var i = 1; i < arguments.length; i += 1){
-      var o = arguments[i];
-      for(var j in o) into[j] = o[i];
-    }
-  }
+  //
+  // function shallowClone(obj){
+  //   var out = {};
+  //   for(var i in obj) out[i] = obj[i];
+  //   return out;
+  // }
+  //
+  // function merge(into){
+  //   for(var i = 1; i < arguments.length; i += 1){
+  //     var o = arguments[i];
+  //     for(var j in o) into[j] = o[i];
+  //   }
+  // }
 
   var inlines = {};
   var blocks = {};
@@ -412,7 +412,15 @@ var md = (function(){
 */
 
   inline('comment', Prism.languages.markup.comment);
-  inline('tag', Prism.languages.markup.tag);
+
+  var tag = Prism.languages.markup.tag;
+  var tagMatch = tag.pattern;
+
+  inline('tag', {
+    pattern: new RegExp("(^|[^\\\\])" + tagMatch.source, 'i'),
+    lookbehind: true,
+    inside: tag.inside
+  });
   inline('entity', Prism.languages.markup.entity);
 
   return md;

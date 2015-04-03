@@ -52,5 +52,6 @@
 .mdedit .em { font-style: italic; }
 .mdedit .strike-inner { text-decoration: line-through }
 .mdedit .code { background: rgba(120,120,120,0.1); padding: 0.15em 0; }
-.mdedit .href, .mdedit .braced-href .braced-href-inner { color: rgba(120,120,120,0.8); }
+.mdedit .href, .mdedit .braced-href .braced-href-inner { color: rgba(120,120,120,0.8); text-decoration: underline; }
 .mdedit .blockquote-content { color: #555; }
+.mdedit .link-text-inner { text-decoration: underline; }

@@ -138,8 +138,10 @@ Editor.prototype.keydown = function(evt){
       evt.preventDefault();
       break;
     case 89:
-      this.undoMgr.redo();
-      evt.preventDefault();
+      if(cmdOrCtrl){
+        this.undoMgr.redo();
+        evt.preventDefault();
+      }
       break;
     case 90:
       if(cmdOrCtrl) {
