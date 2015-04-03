@@ -1,6 +1,8 @@
 
 var el = document.getElementsByTagName('pre')[0];
 
+var selMgr = new SelectionManager(el);
+
 el.onkeyup = function(evt){
   var keyCode = evt && evt.keyCode || 0,
       code = this.textContent;
@@ -32,8 +34,8 @@ el.onkeyup = function(evt){
 el.oninput = function(evt){
   var code = this.textContent;
 
-  var ss = this.selectionStart,
-    se = this.selectionEnd;
+  var ss = selMgr.getStart(),
+    se = selMgr.getEnd();
 
   this.innerHTML = Prism.highlight(code, md);
   // Prism.highlightElement(this); // bit messy + unnecessary + strips leading newlines :(
@@ -95,11 +97,10 @@ el.onkeydown = function(evt){
 };
 
 function action(act, opts){
-  var p = el;
   opts = opts || {};
-  var text = p.textContent;
-  var start = opts.start || p.selectionStart;
-  var end = opts.end || p.selectionEnd;
+  var text = el.textContent;
+  var start = opts.start || selMgr.getStart();
+  var end = opts.end || selMgr.getEnd();
 
   var state = {
     start: start,
@@ -111,10 +112,10 @@ function action(act, opts){
 
   var a = actions[act](state, opts);
 
-  p.textContent = state.before + state.sel + state.after;
+  el.textContent = state.before + state.sel + state.after;
 
-  p.setSelectionRange(state.start, state.end);
-  p.onkeyup();
+  el.setSelectionRange(state.start, state.end);
+  el.onkeyup();
 }
 
 var actions = {

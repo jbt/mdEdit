@@ -21,12 +21,14 @@
 	-moz-hyphens: none;
 	-ms-hyphens: none;
 	hyphens: none;
-  	padding: 1em;
-  	margin: .5em 0;
-  	overflow: auto;
-    	background: #f5f2f0;
+	padding: 1em;
+	overflow: auto;
+	background: #f5f2f0;
 }
 
+.mdedit:focus {
+  outline: none;
+}
 
 .mdedit::-moz-selection, .mdedit ::-moz-selection {
 	background: #b3d4fc;

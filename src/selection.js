@@ -1,72 +1,64 @@
-(function(){
+function SelectionManager(elt){
+	this.elt = elt;
+}
 
-Object.defineProperty(HTMLPreElement.prototype, 'selectionStart', {
-	get: function() {
-		var selection = getSelection();
+SelectionManager.prototype.getStart = function(){
+	var selection = getSelection();
 
-		if(selection.rangeCount) {
-			var range = selection.getRangeAt(0),
-				element = range.startContainer,
-				container = element,
-				offset = range.startOffset;
+	if(!selection.rangeCount) return 0;
 
-			if(!(this.compareDocumentPosition(element) & 0x10)) {
-				return 0;
+	var range = selection.getRangeAt(0);
+	var el = range.startContainer();
+	var container = el;
+	var offset = range.startOffset;
+
+	if(!(this.elt.compareDocumentPosition(el) & 0x10)){
+		// selection is outside this element.
+		return 0;
+	}
+
+	do{
+		while((el = el.previousSibling)){
+			if(el.textContent){
+				offset += el.textContent.length;
 			}
-
-			do {
-				while(element = element.previousSibling) {
-					if(element.textContent) {
-						offset += element.textContent.length;
-					}
-				}
-
-				element = container = container.parentNode;
-			} while(element && element != this);
-
-			return offset;
 		}
-		else {
-			return 0;
-		}
-	},
 
-	enumerable: true,
-	configurable: true
-});
+		el = container = container.parentNode;
+	}while(el && el !== this.elt);
 
-Object.defineProperty(HTMLPreElement.prototype, 'selectionEnd', {
-	get: function() {
-		var selection = getSelection();
+	return offset;
+};
 
-		if(selection.rangeCount) {
-			return this.selectionStart + (selection.getRangeAt(0) + '').length;
-		}
-		else {
-			return 0;
-		}
-	},
+SelectionManager.prototype.getEnd = function(){
+	var selection = getSelection();
 
-	enumerable: true,
-	configurable: true
-});
+	if(!selection.rangeCount) return 0;
 
-HTMLPreElement.prototype.setSelectionRange = function(ss, se) {
-	var range = document.createRange(),
-	    offset = findOffset(this, ss);
+	return this.getStart() + String(selection.getRangeAt(0)).length;
+};
+
+SelectionManager.prototype.setRange = function(start, end){
+	var range = document.createRange();
+	var offset = findOffset(this.elt, start);
 
 	range.setStart(offset.element, offset.offset);
 
-	if(se && se != ss) {
-		offset = findOffset(this, se);
+	if(end && end !== start){
+		offset = findOffset(this.elt, end);
 	}
 
 	range.setEnd(offset.element, offset.offset);
 
-	var selection = window.getSelection();
+	var selection = getSelection();
 	selection.removeAllRanges();
 	selection.addRange(range);
-}
+};
+
+
+
+
+
 
 function findOffset(root, ss) {
 	if(!root) {
@@ -131,5 +123,3 @@ function findOffset(root, ss) {
 		error: true
 	};
 }
-
-})();
