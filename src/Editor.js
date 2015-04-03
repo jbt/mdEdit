@@ -191,10 +191,10 @@ Editor.prototype.action = function(act, opts){
   if(a && !opts.noHistory){
     this.undoMgr.action(a);
   }
+  this.selMgr.setRange(state.start, state.end, false);
 
   this.changed();
 
-  this.selMgr.setRange(state.start, state.end);
 };
 
 Editor.prototype.cut = function(){

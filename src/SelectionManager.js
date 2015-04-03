@@ -38,14 +38,14 @@ SelectionManager.prototype.getEnd = function(){
 	return this.getStart() + String(selection.getRangeAt(0)).length;
 };
 
-SelectionManager.prototype.setRange = function(start, end){
+SelectionManager.prototype.setRange = function(start, end, noscroll){
 	var range = document.createRange();
 	var startOffset = findOffset(this.elt, start);
 	var endOffset = startOffset;
 	if(end && end !== start){
 		endOffset = findOffset(this.elt, end);
 	}{
-		scrollToCaret.call(this, endOffset.element, endOffset.offset);
+		if(noscroll !== false) scrollToCaret.call(this, endOffset.element, endOffset.offset);
 	}
 
 	range.setStart(startOffset.element, startOffset.offset);
@@ -82,7 +82,6 @@ function scrollToCaret(el, offset){
 	el.textContent = t;
 	p.removeChild(caret);
 	p.removeChild(b4);
-
 
 	if(tp - st < 0){
 		this.elt.scrollTop = tp;

@@ -236,7 +236,7 @@ var md = (function(){
     }
   });
 
-  block('code-block', {
+  block('code-block indented', {
     pattern: /(^|(?:^|(?:^|\n)(?![ \t]*([*+\-]|\d+\.)[ \t]).*\n)\s*?\n)((?: {4}|\t).*(?:\n|$))+/g,
     lookbehind: true
   });

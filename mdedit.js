@@ -236,7 +236,7 @@ var md = (function(){
     }
   });
 
-  block('code-block', {
+  block('code-block indented', {
     pattern: /(^|(?:^|(?:^|\n)(?![ \t]*([*+\-]|\d+\.)[ \t]).*\n)\s*?\n)((?: {4}|\t).*(?:\n|$))+/g,
     lookbehind: true
   });
@@ -532,14 +532,14 @@ SelectionManager.prototype.getEnd = function(){
 	return this.getStart() + String(selection.getRangeAt(0)).length;
 };
 
-SelectionManager.prototype.setRange = function(start, end){
+SelectionManager.prototype.setRange = function(start, end, noscroll){
 	var range = document.createRange();
 	var startOffset = findOffset(this.elt, start);
 	var endOffset = startOffset;
 	if(end && end !== start){
 		endOffset = findOffset(this.elt, end);
 	}{
-		scrollToCaret.call(this, endOffset.element, endOffset.offset);
+		if(noscroll !== false) scrollToCaret.call(this, endOffset.element, endOffset.offset);
 	}
 
 	range.setStart(startOffset.element, startOffset.offset);
@@ -577,7 +577,7 @@ function scrollToCaret(el, offset){
 	p.removeChild(caret);
 	p.removeChild(b4);
 
-
+console.log(tp-st);
 	if(tp - st < 0){
 		this.elt.scrollTop = tp;
 	}else if(tp - st + h > ch){
@@ -940,10 +940,10 @@ Editor.prototype.action = function(act, opts){
   if(a && !opts.noHistory){
     this.undoMgr.action(a);
   }
+  this.selMgr.setRange(state.start, state.end, false);
 
   this.changed();
 
-  this.selMgr.setRange(state.start, state.end);
 };
 
 Editor.prototype.cut = function(){
