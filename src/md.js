@@ -61,7 +61,7 @@ var md = (function(){
   }
 
 
-  block('code-block fenced', {
+  block('code-block fenced untagged', {
     pattern: /(^ {0,3}|\n {0,3})(([`~])\3\3)[^`\n]*\n(?:[\s\S]*?)\n {0,3}(\2\3*(?= *\n)|$)/g,
     lookbehind: true,
     inside: {
