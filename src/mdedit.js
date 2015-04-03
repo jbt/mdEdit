@@ -1,137 +1,33 @@
 
 var el = document.getElementsByTagName('pre')[0];
 
-var selMgr = new SelectionManager(el);
 
-el.onkeyup = function(evt){
-  var keyCode = evt && evt.keyCode || 0,
-      code = this.textContent;
-
-  if(keyCode < 9 || keyCode == 13 || keyCode > 32 && keyCode < 41) {
-    // $t.trigger('caretmove');
-  }
-
-  if([
-    9, 91, 93, 16, 17, 18, // modifiers
-    20, // caps lock
-    13, // Enter (handled by keydown)
-    112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, // F[0-12]
-    27 // Esc
-  ].indexOf(keyCode) > -1) {
-    return;
-  }
-
-  if([
-		37, 39, 38, 40 // Left, Right, Up, Down
-	].indexOf(keyCode) === -1) {
-    // $t.trigger('contentchange', {
-    //   keyCode: keyCode
-    // });
-    this.oninput();
+var evt = {
+  bind: function(el, evt, fn){
+    el.addEventListener(evt, fn, false);
   }
 };
 
-el.oninput = function(evt){
-  var code = this.textContent;
 
-  var ss = selMgr.getStart(),
-    se = selMgr.getEnd();
+var st;
 
-  this.innerHTML = Prism.highlight(code, md);
-  // Prism.highlightElement(this); // bit messy + unnecessary + strips leading newlines :(
-
-  // Dirty fix to #2
-  // if(!/\n$/.test(code)) {
-  //   this.innerHTML = this.innerHTML + '\n';
-  // }
-
-  if(ss !== null || se !== null) {
-    this.setSelectionRange(ss, se);
-  }
-};
-
-el.onkeydown = function(evt){
-  var cmdOrCtrl = evt.metaKey || evt.ctrlKey;
-
-  switch(evt.keyCode) {
-    case 8: // Backspace
-      // var ss = this.selectionStart,
-      //   se = this.selectionEnd,
-      //   length = ss === se? 1 : Math.abs(se - ss),
-      //   start = se - length;
-      //
-      // that.undoManager.action({
-      //   add: '',
-      //   del: this.textContent.slice(start, se),
-      //   start: start
-      // });
-      //
-      break;
-    case 9: // Tab
-      // if(!cmdOrCtrl) {
-      //   that.action('indent', {
-      //     inverse: evt.shiftKey
-      //   });
-      //   return false;
-      // }
-      break;
-    case 13:
-      action('newline');
-      evt.preventDefault();
-      return false;
-    case 90:
-      // if(cmdOrCtrl) {
-      //   that.undoManager[evt.shiftKey? 'redo' : 'undo']();
-      //   return false;
-      // }
-
-      break;
-    case 191:
-      // if(cmdOrCtrl && !evt.altKey) {
-      //   that.action('comment', { lang: this.id });
-      //   return false;
-      // }
-
-      break;
-  }
-};
-
-function action(act, opts){
-  opts = opts || {};
-  var text = el.textContent;
-  var start = opts.start || selMgr.getStart();
-  var end = opts.end || selMgr.getEnd();
-
-  var state = {
-    start: start,
-    end: end,
-    before: text.slice(0, start),
-    after: text.slice(end),
-    sel: text.slice(start, end)
-  };
-
-  var a = actions[act](state, opts);
-
-  el.textContent = state.before + state.sel + state.after;
-
-  el.setSelectionRange(state.start, state.end);
-  el.onkeyup();
+function saveScrollPos(){
+  if(st === undefined) st = el.scrollTop;
+  setTimeout(function(){
+    st = undefined;
+  }, 500);
 }
 
-var actions = {
-  newline: function(state, options){//NB leading newline goes weird
-    var s = state.start;
-    state.before += '\n';
+function restoreScrollPos(){
+  el.scrollTop = st;
+  st = undefined;
+}
 
-    var sel = state.sel;
-    state.sel = '';
+String.prototype.splice = function(i, remove, add){
+  remove = +remove || 0;
+  add = add || '';
 
-    state.start += 1;
-    state.end = state.start;
-
-    return { add: '\n', del: sel, start: s };
-  }
+  return this.slice(0,i) + add + this.slice(i+remove);
 };
 
-
-el.onkeyup();
+var ed = new Editor(el);

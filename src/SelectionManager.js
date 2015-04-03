@@ -8,7 +8,7 @@ SelectionManager.prototype.getStart = function(){
 	if(!selection.rangeCount) return 0;
 
 	var range = selection.getRangeAt(0);
-	var el = range.startContainer();
+	var el = range.startContainer;
 	var container = el;
 	var offset = range.startOffset;
 

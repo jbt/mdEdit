@@ -429,75 +429,134 @@ var md = (function(){
 
   return md;
 })();
-(function(){
 
-Object.defineProperty(HTMLPreElement.prototype, 'selectionStart', {
-	get: function() {
-		var selection = getSelection();
+var actions = {
+  newline: function(state, options){
+    var s = state.start;
+    var lf = state.before.lastIndexOf('\n') + 1;
+    var afterLf = state.before.slice(lf);
+    var indent = afterLf.match(/^\s*/)[0];
+    var cl = '';
 
-		if(selection.rangeCount) {
-			var range = selection.getRangeAt(0),
-				element = range.startContainer,
-				container = element,
-				offset = range.startOffset;
+    if(/^ {0,3}$/.test(indent)){ // maybe list
+      var l = afterLf.slice(indent.length);
+      if(/^[*+\-]\s+/.test(l)){
+        cl += l.match(/^[*+\-]\s+/)[0];
+      }else if(/^\d+\.\s+/.test(l)){
+        cl += l.match(/^\d+\.\s+/)[0]
+                .replace(/^\d+/, function(n){ return +n+1; });
+      }else if(/^>/.test(l)){
+        cl += l.match(/^>\s*/)[0];
+      }
+    }
 
-			if(!(this.compareDocumentPosition(element) & 0x10)) {
-				return 0;
+    indent += cl;
+
+    state.before += '\n' + indent;
+
+    var sel = state.sel;
+    state.sel = '';
+
+    state.start += 1 + indent.length;
+    state.end = state.start;
+
+    return { add: '\n' + indent, del: sel, start: s };
+  },
+
+  indent: function(state, options){
+    var lf = state.before.lastIndexOf('\n') + 1;
+
+    // TODO deal with soft tabs
+
+    if(options.inverse){
+      if(/\s/.test(state.before.charAt(lf))){
+        state.before = state.before.splice(lf, 1);
+        state.start -= 1;
+      }
+      state.sel = state.sel.replace(/\r?\n(?!\r?\n)\s/, '\n');
+    }else if(state.sel || options.ctrl){
+      state.before = state.before.splice(lf, 0, '\t');
+      state.sel = state.sel.replace(/\r?\n/, '\n\t');
+      state.start += 1;
+    }else{
+      state.before += '\t';
+      state.start += 1;
+      state.end  += 1;
+
+      return { add: '\t', del: '', start: state.start - 1 };
+    }
+
+    state.end = state.start + state.sel.length;
+
+    return {
+      action: 'indent',
+      start: state.start,
+      end: state.end,
+      inverse: options.inverse
+    };
+  }
+};
+function SelectionManager(elt){
+	this.elt = elt;
+}
+
+SelectionManager.prototype.getStart = function(){
+	var selection = getSelection();
+
+	if(!selection.rangeCount) return 0;
+
+	var range = selection.getRangeAt(0);
+	var el = range.startContainer;
+	var container = el;
+	var offset = range.startOffset;
+
+	if(!(this.elt.compareDocumentPosition(el) & 0x10)){
+		// selection is outside this element.
+		return 0;
+	}
+
+	do{
+		while((el = el.previousSibling)){
+			if(el.textContent){
+				offset += el.textContent.length;
 			}
-
-			do {
-				while(element = element.previousSibling) {
-					if(element.textContent) {
-						offset += element.textContent.length;
-					}
-				}
-
-				element = container = container.parentNode;
-			} while(element && element != this);
-
-			return offset;
 		}
-		else {
-			return 0;
-		}
-	},
 
-	enumerable: true,
-	configurable: true
-});
+		el = container = container.parentNode;
+	}while(el && el !== this.elt);
 
-Object.defineProperty(HTMLPreElement.prototype, 'selectionEnd', {
-	get: function() {
-		var selection = getSelection();
+	return offset;
+};
 
-		if(selection.rangeCount) {
-			return this.selectionStart + (selection.getRangeAt(0) + '').length;
-		}
-		else {
-			return 0;
-		}
-	},
+SelectionManager.prototype.getEnd = function(){
+	var selection = getSelection();
 
-	enumerable: true,
-	configurable: true
-});
+	if(!selection.rangeCount) return 0;
 
-HTMLPreElement.prototype.setSelectionRange = function(ss, se) {
-	var range = document.createRange(),
-	    offset = findOffset(this, ss);
+	return this.getStart() + String(selection.getRangeAt(0)).length;
+};
+
+SelectionManager.prototype.setRange = function(start, end){
+	var range = document.createRange();
+	var offset = findOffset(this.elt, start);
 
 	range.setStart(offset.element, offset.offset);
 
-	if(se && se != ss) {
-		offset = findOffset(this, se);
+	if(end && end !== start){
+		offset = findOffset(this.elt, end);
 	}
 
 	range.setEnd(offset.element, offset.offset);
 
-	var selection = window.getSelection();
+	var selection = getSelection();
 	selection.removeAllRanges();
 	selection.addRange(range);
-}
+};
+
+
+
+
+
 
 function findOffset(root, ss) {
 	if(!root) {
@@ -562,18 +621,126 @@ function findOffset(root, ss) {
 		error: true
 	};
 }
+function UndoManager(editor){
+  this.editor = editor;
 
-})();
+  this.undoStack = [];
+  this.redoStack = [];
+}
 
-var el = document.getElementsByTagName('pre')[0];
+UndoManager.prototype.action = function(a){
+  /// sanity?
 
-el.onkeyup = function(evt){
-  var keyCode = evt && evt.keyCode || 0,
-      code = this.textContent;
-
-  if(keyCode < 9 || keyCode == 13 || keyCode > 32 && keyCode < 41) {
-    // $t.trigger('caretmove');
+  if(this.undoStack.length && this.canCombine(this.undoStack[this.undoStack.length-1], a)){
+    this.undoStack.push(this.combine(this.undoStack.pop(), a));
+  }else{
+    this.undoStack.push(a);
   }
+  this.redoStack = [];
+};
+
+UndoManager.prototype.canCombine = function(a, b){
+  return (
+    !a.action && !b.action &&
+    !Array.isArray(a) && !Array.isArray(b) &&
+    !(a.del && b.add) && !(a.add && b.del) &&
+    !(a.add && !b.add) && !(!a.add && b.add) &&
+    !(a.add && a.del) &&
+    !(b.add && b.del) &&
+    a.start + a.add.length === b.start + b.del.length
+  );
+};
+
+UndoManager.prototype.combine = function(a, b){
+  return {
+    add: a.add + b.add,
+    del: b.del + a.del,
+    start: Math.min(a.start, b.start)
+  };
+};
+
+UndoManager.prototype.undo = function(){
+  if(!this.undoStack.length) return;
+
+  var a = this.undoStack.pop();
+  this.redoStack.push(a);
+
+  this.applyInverse(a);
+};
+
+UndoManager.prototype.redo = function(){
+  if(!this.redoStack.length) return;
+
+  var a = this.redoStack.pop();
+  this.undoStack.push(a);
+
+  this.apply(a);
+};
+
+UndoManager.prototype.apply = function apply(a){
+  if(Array.isArray(a)){
+    a.forEach(apply.bind(this));
+    return;
+  }
+
+  if(a.action){
+    this.editor.action(a.action, {
+      inverse: a.inverse,
+      start: a.start,
+      end: a.end,
+      noHistory: true
+    });
+  }else{
+    this.editor.apply(a);
+  }
+};
+
+UndoManager.prototype.applyInverse = function inv(a){
+  if(Array.isArray(a)){
+    a.forEach(inv.bind(this));
+    return;
+  }
+
+  if(a.action){
+    this.editor.action(a.action, {
+      inverse: !a.inverse,
+      start: a.start,
+      end: a.end,
+      noHistory: true
+    });
+  }else{
+    this.editor.apply({
+      start: a.start,
+      end: a.end,
+      del: a.add,
+      add: a.del
+    });
+  }
+};
+function Editor(el){
+  this.el = el;
+
+  this.selMgr = new SelectionManager(el);
+  this.undoMgr = new UndoManager(this);
+
+  evt.bind(el, 'cut', this.cut.bind(this));
+  evt.bind(el, 'paste', this.paste.bind(this));
+  evt.bind(el, 'keyup', this.keyup.bind(this));
+  evt.bind(el, 'input', this.changed.bind(this));
+  evt.bind(el, 'keydown', this.keydown.bind(this));
+  evt.bind(el, 'keypress', this.keypress.bind(this));
+
+  this.changed();
+}
+
+
+Editor.prototype.keyup = function(evt){
+  var keyCode = evt && evt.keyCode || 0,
+      code = this.el.textContent;
+
+  // if(keyCode < 9 || keyCode == 13 || keyCode > 32 && keyCode < 41) {
+    // $t.trigger('caretmove');
+  // }
 
   if([
     9, 91, 93, 16, 17, 18, // modifiers
@@ -591,63 +758,99 @@ el.onkeyup = function(evt){
     // $t.trigger('contentchange', {
     //   keyCode: keyCode
     // });
-    this.oninput();
+    this.changed();
   }
 };
 
-el.oninput = function(evt){
-  var code = this.textContent;
+Editor.prototype.changed = function(evt){
+  var code = this.el.textContent;
 
-  var ss = this.selectionStart,
-    se = this.selectionEnd;
+  var ss = this.selMgr.getStart(),
+    se = this.selMgr.getEnd();
 
-  this.innerHTML = Prism.highlight(code, md);
+  saveScrollPos();
+
+  this.el.innerHTML = Prism.highlight(code, md);
   // Prism.highlightElement(this); // bit messy + unnecessary + strips leading newlines :(
 
-  // Dirty fix to #2
+  restoreScrollPos();
+  // // Dirty fix to #2
   // if(!/\n$/.test(code)) {
   //   this.innerHTML = this.innerHTML + '\n';
   // }
 
   if(ss !== null || se !== null) {
-    this.setSelectionRange(ss, se);
+    this.selMgr.setRange(ss, se);
   }
 };
 
-el.onkeydown = function(evt){
+Editor.prototype.keypress = function(evt){
+  var ctrl = evt.metaKey || evt.ctrl;
+
+  if(ctrl) return;
+
+  var code = evt.charCode;
+
+  if(!code) return;
+
+  var start = this.selMgr.getStart();
+  var end = this.selMgr.getEnd();
+
+  var chr = String.fromCharCode(code);
+  this.undoMgr.action({
+    add: chr,
+    del: start === end ? '' : this.el.textContent.slice(start, end),
+    start: start
+  });
+};
+
+Editor.prototype.keydown = function(evt){
   var cmdOrCtrl = evt.metaKey || evt.ctrlKey;
 
   switch(evt.keyCode) {
     case 8: // Backspace
-      // var ss = this.selectionStart,
-      //   se = this.selectionEnd,
-      //   length = ss === se? 1 : Math.abs(se - ss),
-      //   start = se - length;
-      //
-      // that.undoManager.action({
-      //   add: '',
-      //   del: this.textContent.slice(start, se),
-      //   start: start
-      // });
-      //
+    case 46: // Delete
+      var start = this.selMgr.getStart();
+      var end = this.selMgr.getEnd();
+      var length = start === end ? 1 : Math.abs(end - start);
+      start = evt.keyCode === 8 ? end - length : start;
+      this.undoMgr.action({
+        add: '',
+        del: this.el.textContent.slice(start, start + length),
+        start: start
+      });
       break;
     case 9: // Tab
-      // if(!cmdOrCtrl) {
-      //   that.action('indent', {
-      //     inverse: evt.shiftKey
-      //   });
-      //   return false;
-      // }
+      if(!cmdOrCtrl) {
+        this.action('indent', {
+          inverse: evt.shiftKey
+        });
+        evt.preventDefault();
+      }
+      break;
+    case 219: // [
+    case 221: // ]
+      if(cmdOrCtrl && !evt.shiftKey) {
+        this.action('indent', {
+          inverse: evt.keyCode === 219,
+          ctrl: true
+        });
+        evt.preventDefault();
+      }
       break;
     case 13:
-      action('newline');
+      this.action('newline');
       evt.preventDefault();
-      return false;
+      break;
+    case 89:
+      this.undoMgr.redo();
+      evt.preventDefault();
+      break;
     case 90:
-      // if(cmdOrCtrl) {
-      //   that.undoManager[evt.shiftKey? 'redo' : 'undo']();
-      //   return false;
-      // }
+      if(cmdOrCtrl) {
+        this.undoMgr[evt.shiftKey? 'redo' : 'undo']();
+        evt.preventDefault();
+      }
 
       break;
     case 191:
@@ -660,12 +863,19 @@ el.onkeydown = function(evt){
   }
 };
 
-function action(act, opts){
-  var p = el;
+Editor.prototype.apply = function(action){
+  var e = this.el;
+
+  e.textContent = e.textContent.splice(action.start, action.del.length, action.add);
+  this.selMgr.setRange(action.start, action.start + action.add.length);
+  this.changed();
+};
+
+Editor.prototype.action = function(act, opts){
   opts = opts || {};
-  var text = p.textContent;
-  var start = opts.start || p.selectionStart;
-  var end = opts.end || p.selectionEnd;
+  var text = this.el.textContent;
+  var start = opts.start || this.selMgr.getStart();
+  var end = opts.end || this.selMgr.getEnd();
 
   var state = {
     start: start,
@@ -677,26 +887,84 @@ function action(act, opts){
 
   var a = actions[act](state, opts);
 
-  p.textContent = state.before + state.sel + state.after;
+  saveScrollPos();
 
-  p.setSelectionRange(state.start, state.end);
-  p.onkeyup();
-}
+  this.el.textContent = state.before + state.sel + state.after;
 
-var actions = {
-  newline: function(state, options){//NB leading newline goes weird
-    var s = state.start;
-    state.before += '\n';
+  if(a && !opts.noHistory){
+    this.undoMgr.action(a);
+  }
 
-    var sel = state.sel;
-    state.sel = '';
+  this.changed();
 
-    state.start += 1;
-    state.end = state.start;
+  this.selMgr.setRange(state.start, state.end);
+};
 
-    return { add: '\n', del: sel, start: s };
+Editor.prototype.cut = function(){
+  var start = this.selMgr.getStart();
+  var end = this.selMgr.getEnd();
+  if(start === end) return;
+
+  this.undoMgr.action({
+    add: '',
+    del: this.el.textContent.slice(start, end),
+    start: start
+  });
+};
+
+Editor.prototype.paste = function(evt){
+  var start = this.selMgr.getStart();
+  var end = this.selMgr.getEnd();
+  var selection = start === end ? '' : this.el.textContent.slice(start, end);
+
+  if(evt.clipboardData){
+    evt.preventDefault();
+
+    var pasted = evt.clipboardData.getData('text/plain');
+
+    document.execCommand('insertText', false, pasted);
+
+    this.undoMgr.action({
+      add: pasted,
+      del: selection,
+      start: start
+    });
+
+    start += pasted.length;
+    this.selMgr.setRange(start, start);
+    this.changed();
+  }
+};
+
+var el = document.getElementsByTagName('pre')[0];
+
+
+var evt = {
+  bind: function(el, evt, fn){
+    el.addEventListener(evt, fn, false);
   }
 };
 
 
-el.onkeyup();
+var st;
+
+function saveScrollPos(){
+  if(st === undefined) st = el.scrollTop;
+  setTimeout(function(){
+    st = undefined;
+  }, 500);
+}
+
+function restoreScrollPos(){
+  el.scrollTop = st;
+  st = undefined;
+}
+
+String.prototype.splice = function(i, remove, add){
+  remove = +remove || 0;
+  add = add || '';
+
+  return this.slice(0,i) + add + this.slice(i+remove);
+};
+
+var ed = new Editor(el);
