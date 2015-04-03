@@ -14,7 +14,7 @@ build: \
 
 mdedit.js: \
 	src/md.js \
-	src/selection.js \
+	src/SelectionManager.js \
 	src/mdedit.js
 
 compiler.jar:
