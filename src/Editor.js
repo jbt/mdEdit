@@ -1,11 +1,17 @@
-function Editor(el){
+function Editor(el, opts){
+
+  opts = opts || {};
+
   if(el.tagName === 'PRE'){
     this.el = el;
   }else{
     this.el = document.createElement('pre');
     el.appendChild(this.el);
   }
-  this.el.className = 'mdedit';
+
+  var cname = opts['className'] || '';
+
+  this.el.className = 'mdedit' + (cname ? ' ' + cname : '');
 
   this.selMgr = new SelectionManager(el);
   this.undoMgr = new UndoManager(this);
@@ -16,6 +22,10 @@ function Editor(el){
   evt.bind(el, 'input', this.changed.bind(this));
   evt.bind(el, 'keydown', this.keydown.bind(this));
   evt.bind(el, 'keypress', this.keypress.bind(this));
+
+
+  var changeCb = opts['change'];
+  this.changeCb = changeCb || function(){};
 
   this.changed();
 }
@@ -50,9 +60,6 @@ Editor.prototype.keyup = function(evt){
   if([
 		37, 39, 38, 40 // Left, Right, Up, Down
 	].indexOf(keyCode) === -1) {
-    // $t.trigger('contentchange', {
-    //   keyCode: keyCode
-    // });
     this.changed();
   }
 };
@@ -63,24 +70,35 @@ Editor.prototype.changed = function(evt){
   var ss = this.selMgr.getStart(),
     se = this.selMgr.getEnd();
 
-  saveScrollPos();
+  this.saveScrollPos();
 
-  this.el.innerHTML = Prism.highlight(code, md);
+  this.el.innerHTML = Prism['highlight'](code, md);
   // Prism.highlightElement(this); // bit messy + unnecessary + strips leading newlines :(
 
-  restoreScrollPos();
-  // // Dirty fix to #2
-  // if(!/\n$/.test(code)) {
-  //   this.innerHTML = this.innerHTML + '\n';
-  // }
+  this.restoreScrollPos();
 
   if(ss !== null || se !== null) {
     this.selMgr.setRange(ss, se);
   }
+
+  this.changeCb(code);
 };
 
+Editor.prototype.saveScrollPos = function(){
+  if(this.st === undefined) this.st = this.el.scrollTop;
+  setTimeout(function(){
+    this.st = undefined;
+  }.bind(this), 500);
+};
+
+Editor.prototype.restoreScrollPos = function(){
+  this.el.scrollTop = this.st;
+  this.st = undefined;
+};
+
+
 Editor.prototype.keypress = function(evt){
-  var ctrl = evt.metaKey || evt.ctrl;
+  var ctrl = evt.metaKey || evt.ctrlKey;
 
   if(ctrl) return;
 
@@ -163,7 +181,7 @@ Editor.prototype.keydown = function(evt){
 Editor.prototype.apply = function(action){
   var e = this.el;
 
-  e.textContent = e.textContent.splice(action.start, action.del.length, action.add);
+  e.textContent = spliceString(e.textContent, action.start, action.del.length, action.add);
   this.selMgr.setRange(action.start, action.start + action.add.length);
   this.changed();
 };
@@ -184,7 +202,7 @@ Editor.prototype.action = function(act, opts){
 
   var a = actions[act](state, opts);
 
-  saveScrollPos();
+  this.saveScrollPos();
 
   this.el.textContent = state.before + state.sel + state.after;
 

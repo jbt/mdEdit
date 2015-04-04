@@ -14,6 +14,7 @@ build: \
 
 mdedit.js: \
 	src/md.js \
+	src/util.js \
 	src/actions.js \
 	src/SelectionManager.js \
 	src/UndoManager.js \

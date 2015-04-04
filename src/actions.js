@@ -39,12 +39,12 @@ var actions = {
 
     if(options.inverse){
       if(/\s/.test(state.before.charAt(lf))){
-        state.before = state.before.splice(lf, 1);
+        state.before = spliceString(state.before, lf, 1);
         state.start -= 1;
       }
       state.sel = state.sel.replace(/\r?\n(?!\r?\n)\s/, '\n');
     }else if(state.sel || options.ctrl){
-      state.before = state.before.splice(lf, 0, '\t');
+      state.before = spliceString(state.before, lf, 0, '\t');
       state.sel = state.sel.replace(/\r?\n/, '\n\t');
       state.start += 1;
     }else{
