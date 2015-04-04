@@ -760,8 +760,8 @@ Editor.prototype.keyup = function(evt){
   }
 
   if([
-		37, 39, 38, 40 // Left, Right, Up, Down
-	].indexOf(keyCode) === -1) {
+    37, 39, 38, 40 // Left, Right, Up, Down
+  ].indexOf(keyCode) === -1) {
     this.changed();
   }
 };
@@ -776,6 +776,10 @@ Editor.prototype.changed = function(evt){
 
   this.el.innerHTML = Prism['highlight'](code, md);
   // Prism.highlightElement(this); // bit messy + unnecessary + strips leading newlines :(
+
+  if(!/\n$/.test(code)) {
+    this.el.innerHTML = this.el.innerHTML + '\n';
+  }
 
   this.restoreScrollPos();
 
@@ -865,7 +869,7 @@ Editor.prototype.keydown = function(evt){
       break;
     case 90:
       if(cmdOrCtrl) {
-        this.undoMgr[evt.shiftKey? 'redo' : 'undo']();
+        evt.shiftKey ? this.undoMgr.redo() : this.undoMgr.undo();
         evt.preventDefault();
       }
 
@@ -939,7 +943,11 @@ Editor.prototype.paste = function(evt){
 
     var pasted = evt.clipboardData.getData('text/plain');
 
-    document.execCommand('insertText', false, pasted);
+    this.apply({
+      add: pasted,
+      del: selection,
+      start: start
+    });
 
     this.undoMgr.action({
       add: pasted,
