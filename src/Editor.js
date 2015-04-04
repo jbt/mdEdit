@@ -1,5 +1,9 @@
 function Editor(el, opts){
 
+  if(!(this instanceof Editor)){
+    return new Editor(el, opts);
+  }
+
   opts = opts || {};
 
   if(el.tagName === 'PRE'){
@@ -12,6 +16,7 @@ function Editor(el, opts){
   var cname = opts['className'] || '';
 
   this.el.className = 'mdedit' + (cname ? ' ' + cname : '');
+  this.el.setAttribute('contenteditable', true);
 
   this.selMgr = new SelectionManager(el);
   this.undoMgr = new UndoManager(this);
@@ -30,12 +35,21 @@ function Editor(el, opts){
   this.changed();
 }
 
-Editor.prototype.setValue = function(val){
+Editor.prototype.fireChange = function(){
+  var prev = this._prevValue;
+  var now = this.getValue();
+  if(prev !== now){
+    this.changeCb(now);
+    this._prevValue = now;
+  }
+};
+
+Editor.prototype['setValue'] = function(val){
   this.el.textContent = val;
   this.changed();
 };
 
-Editor.prototype.getValue = function(){
+Editor.prototype['getValue'] = function(){
   return this.el.textContent;
 };
 
@@ -81,7 +95,7 @@ Editor.prototype.changed = function(evt){
     this.selMgr.setRange(ss, se);
   }
 
-  this.changeCb(code);
+  this.fireChange();
 };
 
 Editor.prototype.saveScrollPos = function(){

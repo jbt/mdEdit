@@ -1,0 +1,1 @@
+window['mdEdit'] = (function(Prism){

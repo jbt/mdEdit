@@ -13,13 +13,14 @@ build: \
 	mdedit.min.js
 
 mdedit.js: \
+	src/_start.js \
 	src/md.js \
 	src/util.js \
 	src/actions.js \
 	src/SelectionManager.js \
 	src/UndoManager.js \
 	src/Editor.js \
-	src/mdedit.js
+	src/_end.js
 
 compiler.jar:
 	wget -O- https://dl.google.com/closure-compiler/compiler-latest.tar.gz | tar -xz compiler.jar

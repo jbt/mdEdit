@@ -433,7 +433,13 @@ Bigger stuff:
 
 </pre>
 
-<script src="mdedit.min.js">
+<script src="mdedit.min.js"></script>
+
+<script>
+
+var e = mdEdit(document.querySelector('pre'), {
+  change: function(){ console.log(arguments); }
+});
 
 </script>
 

@@ -1,6 +1,6 @@
 
 var actions = {
-  newline: function(state, options){
+  'newline': function(state, options){
     var s = state.start;
     var lf = state.before.lastIndexOf('\n') + 1;
     var afterLf = state.before.slice(lf);
@@ -32,7 +32,7 @@ var actions = {
     return { add: '\n' + indent, del: sel, start: s };
   },
 
-  indent: function(state, options){
+  'indent': function(state, options){
     var lf = state.before.lastIndexOf('\n') + 1;
 
     // TODO deal with soft tabs
