@@ -19,49 +19,11 @@
     margin: 0;
   }
 
-/*
-  pre {
-    font-size: 12px;
-    line-height: 1.3;
-  }
-
-  .token.heading { font-weight: bold; }
-  .token.heading .heading-hash { font-weight: normal; }
-  .token.heading .heading-setext-line { font-weight: normal; }
-  .token.heading.heading-1 { font-size: 2em; }
-  .token.heading.heading-2 { font-size: 1.75em; }
-  .token.heading.heading-3 { font-size: 1.5em; }
-  .token.heading.heading-4 { font-size: 1.3em; }
-  .token.heading.heading-5 { font-size: 1.2em; }
-  .token.heading.heading-6 { font-size: 1.15em; }
-  .token.marker { color: rgba(120,120,120,0.5); }
-  .token.strong { font-weight: bold; }
-  .token.em { font-style: italic; }
-  .token.strike-inner { text-decoration: line-through }
-  .token.code { background: rgba(120,120,120,0.1); padding: 0.15em 0; }
-  .token.href, .token.braced-href .braced-href-inner { color: rgba(120,120,120,0.8); }
-  .token.blockquote-content { color: #555; }*/
-
-  /* nice debugging styles */
-  /*.token {
-    border: 1px solid red;
-    padding: 10px;
-  }
-  .token>.token { padding: 8px }
-  .token>.token>.token { padding: 6px }
-  .token>.token>.token>.token { padding: 4px }
-  .token>.token>.token>.token>.token { padding: 2px }
-  .token>.token>.token>.token>.token>.token { padding: 0px }*/
-  /*.token:before {
-    content: attr(class);
-    font-size: 0.1em;
-  }*/
-
   </style>
 </head>
 <body>
 
-<pre class="mdedit" contenteditable>
+<pre>
 
 
 # Big heading
@@ -440,7 +402,7 @@ Bigger stuff:
 <script>
 
 var e = mdEdit(document.querySelector('pre'), {
-  change: function(){ console.log(arguments); }
+  change: function(value){ console.log('VALUE CHANGED', value); }
 });
 
 </script>
