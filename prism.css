@@ -8,12 +8,12 @@
 code[class*="language-"],
 pre[class*="language-"] {
 	color: black;
-	/*text-shadow: 0 1px white;*/
+	text-shadow: 0 1px white;
 	font-family: Consolas, Monaco, 'Andale Mono', monospace;
 	direction: ltr;
 	text-align: left;
 	white-space: pre;
-	/*************/ white-space: pre-wrap;
+	white-space: pre-wrap;
 	word-spacing: normal;
 	word-break: normal;
 	line-height: 1.5;
