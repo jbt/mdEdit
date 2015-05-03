@@ -1,4 +1,4 @@
 
 return Editor;
 
-})(window['Prism']);
+}));

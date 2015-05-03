@@ -29,7 +29,7 @@ mdedit.min.js: \
 	mdedit.js \
 	compiler.jar \
 
-	java -jar compiler.jar --compilation_level ADVANCED_OPTIMIZATIONS < $< > $@
+	java -jar compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS < $< > $@
 
 mdedit.js:
 	@rm -f $@
