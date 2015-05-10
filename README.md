@@ -2,7 +2,7 @@
 
 Syntax-highlighted / semi-formatted markdown editor view with minimal dependencies.
 
-As seen in my [online markdown editor](//jbt.github.io/markdown-editor) (the left-hand side is this editor).
+As seen in my [online markdown editor](//jbt.github.io/markdown-editor) (the left-hand side is this editor, or more accurately it will be once I've merged [this pull request](https://github.com/jbt/markdown-editor/pull/25)).
 
 Requires [Prism](//prismjs.com) - Prism core is required plus any languages you want to be syntax-highlighted inside fenced code blocks. The bundled `prism-all.js` includes _all_ available languages.
 
