@@ -5,31 +5,41 @@ var actions = {
     var lf = state.before.lastIndexOf('\n') + 1;
     var afterLf = state.before.slice(lf);
     var indent = afterLf.match(/^\s*/)[0];
-    var cl = '';
+    var add = indent;
+    var clearPrevLine = false;
 
     if(/^ {0,3}$/.test(indent)){ // maybe list
       var l = afterLf.slice(indent.length);
       if(/^[*+\-]\s+/.test(l)){
-        cl += l.match(/^[*+\-]\s+/)[0];
+        add += l.match(/^[*+\-]\s+/)[0];
+        clearPrevLine = /^[*+\-]\s+$/.test(l);
       }else if(/^\d+\.\s+/.test(l)){
-        cl += l.match(/^\d+\.\s+/)[0]
+        add += l.match(/^\d+\.\s+/)[0]
                 .replace(/^\d+/, function(n){ return +n+1; });
+        clearPrevLine = /^\d+\.\s+$/.test(l);
       }else if(/^>/.test(l)){
-        cl += l.match(/^>\s*/)[0];
+        add += l.match(/^>\s*/)[0];
+        clearPrevLine = /^>\s*$/.test(l);
       }
     }
 
-    indent += cl;
+    add = '\n' + add;
 
-    state.before += '\n' + indent;
-
-    var sel = state.sel;
+    var del = state.sel;
     state.sel = '';
 
-    state.start += 1 + indent.length;
+    if(clearPrevLine){ // if prev line was actually an empty liste item, clear it
+      del = afterLf + del;
+      state.before = state.before.slice(0, lf);
+      state.start -= afterLf.length;
+      add = '\n';
+    }
+
+    state.before += add;
+    state.start += add.length;
     state.end = state.start;
 
-    return { add: '\n' + indent, del: sel, start: s };
+    return { add: add, del: del, start: s };
   },
 
   'indent': function(state, options){
