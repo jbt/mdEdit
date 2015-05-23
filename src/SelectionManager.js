@@ -44,7 +44,7 @@ SelectionManager.prototype.setRange = function(start, end, noscroll){
 	var endOffset = startOffset;
 	if(end && end !== start){
 		endOffset = findOffset(this.elt, end);
-	}{
+	}else{
 		if(noscroll !== false) scrollToCaret.call(this, endOffset.element, endOffset.offset);
 	}
 
