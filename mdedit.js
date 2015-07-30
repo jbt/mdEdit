@@ -109,7 +109,7 @@ var md = (function(){
   };
   for(var i = 1; i <= 6; i += 1){
     block('heading heading-'+i, {
-      'pattern': new RegExp('^ {0,3}#{'+i+'}(?!#).*$', 'gm'),
+      'pattern': new RegExp('^ {0,3}#{'+i+'}(?![#\\S]).*$', 'gm'),
       'inside': headingInside
     });
   }
