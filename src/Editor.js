@@ -130,6 +130,16 @@ Editor.prototype.keypress = function(evt){
   var end = this.selMgr.getEnd();
 
   var chr = String.fromCharCode(code);
+
+  if(/[\[\{\(<"'~\*_]/.test(chr) && start !== end){
+    this.action('wrap', {
+      bracket: chr
+    });
+    evt.preventDefault();
+    return;
+  }
+
+
   this.undoMgr.action({
     add: chr,
     del: start === end ? '' : this.el.textContent.slice(start, end),

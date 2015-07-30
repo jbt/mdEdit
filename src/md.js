@@ -3,6 +3,17 @@ var md = (function(){
     'comment': Prism['languages']['markup']['comment']
   };
 
+
+  md['front-matter'] = {
+    'pattern': /^---\n[\s\S]*?\n---(?=\n|$)/,
+    'inside': {
+      'marker front-matter-marker start': /^---/,
+      'marker front-matter-marker end': /---$/,
+      'rest': yaml
+    }
+  };
+
+
   var inlines = {};
   var blocks = {};
 
