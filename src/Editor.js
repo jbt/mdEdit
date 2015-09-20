@@ -88,7 +88,12 @@ Editor.prototype.changed = function(evt){
 
   this.saveScrollPos();
 
-  this.el.innerHTML = Prism['highlight'](code, md);
+  if(code === this._prevCode){
+    if(this.el.innerHTML !== this._prevHTML) this.el.innerHTML = this._prevHTML;
+  }else{
+    this._prevHTML = this.el.innerHTML = Prism['highlight'](code, md);
+  }
+  this._prevCode = code;
   // Prism.highlightElement(this); // bit messy + unnecessary + strips leading newlines :(
 
   if(!/\n$/.test(code)) {
