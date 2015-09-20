@@ -216,7 +216,9 @@ var md = (function(){
       'marker quote-marker': /^[\t ]*>[\t ]?/gm,
       'blockquote-content': {
         'pattern': /[^>]+/,
-        'rest': blocks
+        'inside': {
+          'rest': blocks
+        }
       }
     }
   });
