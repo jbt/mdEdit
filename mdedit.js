@@ -1,17 +1,14 @@
-(function (root, factory) {
-    if (typeof define === 'function' && define['amd']) {
-        // AMD. Register as an anonymous module.
-        define(['prismjs'], factory);
-    } else if (typeof exports === 'object') {
-        // Node. Does not work with strict CommonJS, but
-        // only CommonJS-like environments that support module.exports,
-        // like Node.
-        module['exports'] = factory(require('prismjs'));
-    } else {
-        // Browser globals (root is window)
-        root['mdEdit'] = factory(root['Prism']);
-    }
-}(this, function (Prism) {
+
+(function(root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    define(["prismjs"], factory);
+  } else if (typeof exports === 'object') {
+    module.exports = factory(require('prismjs'));
+  } else {
+    root.mdEdit = factory(root.Prism);
+  }
+}(this, function(Prism) {
+
 var yaml = {
   'scalar': {
     'pattern': /([\-:]\s*(![^\s]+)?[ \t]*[|>])[ \t]*(?:(\n[ \t]+)[^\r\n]+(?:\3[^\r\n]+)*)/,
@@ -56,6 +53,7 @@ var yaml = {
   'important': /[&*][\w]+/,
   'punctuation': /([:[\]{}\-,|>?]|---|\.\.\.)/
 };
+
 var md = (function(){
   var md = {
     'comment': Prism['languages']['markup']['comment']
@@ -534,6 +532,7 @@ var actions = {
     };
   }
 };
+
 function SelectionManager(elt){
 	this.elt = elt;
 }
@@ -692,6 +691,7 @@ function findOffset(root, ss) {
 		error: true
 	};
 }
+
 function UndoManager(editor){
   this.editor = editor;
 
@@ -788,6 +788,7 @@ UndoManager.prototype.applyInverse = function inv(a){
     });
   }
 };
+
 function Editor(el, opts){
 
   if(!(this instanceof Editor)){
