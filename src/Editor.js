@@ -15,7 +15,8 @@ function Editor(el, opts){
 
   var cname = opts['className'] || '';
 
-  this.el.className = 'mdedit' + (cname ? ' ' + cname : '');
+  this.el.className = this.el.className ? this.el.className + ' ' : '';
+  this.el.className += 'mdedit' + (cname ? ' ' + cname : '');
   this.el.setAttribute('contenteditable', true);
 
   this.selMgr = new SelectionManager(el);
