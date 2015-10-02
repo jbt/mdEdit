@@ -18,6 +18,11 @@ function Editor(el, opts){
   this.el.className = 'mdedit' + (cname ? ' ' + cname : '');
   this.el.setAttribute('contenteditable', true);
 
+  var inner = this.inner = document.createElement('div');
+  inner.innerHTML = this.el.innerHTML;
+  this.el.innerHTML = '';
+  this.el.appendChild(inner);
+
   this.selMgr = new SelectionManager(el);
   this.undoMgr = new UndoManager(this);
 
@@ -45,17 +50,25 @@ Editor.prototype.fireChange = function(){
 };
 
 Editor.prototype['setValue'] = function(val){
-  this.el.textContent = val;
+  this.setText(val);
   this.changed();
 };
 
 Editor.prototype['getValue'] = function(){
-  return this.el.textContent;
+  return this.getText();
+};
+
+Editor.prototype.getText = function(){
+  return this.inner.textContent;
+};
+
+Editor.prototype.setText = function(val){
+  this.inner.textContent = val;
 };
 
 Editor.prototype.keyup = function(evt){
   var keyCode = evt && evt.keyCode || 0,
-      code = this.el.textContent;
+      code = this.getText();
 
   // if(keyCode < 9 || keyCode == 13 || keyCode > 32 && keyCode < 41) {
     // $t.trigger('caretmove');
@@ -81,23 +94,32 @@ Editor.prototype.keyup = function(evt){
 };
 
 Editor.prototype.changed = function(evt){
-  var code = this.el.textContent;
+  var code = this.getText();
 
   var ss = this.selMgr.getStart(),
     se = this.selMgr.getEnd();
 
   this.saveScrollPos();
 
+  var setHTML;
+
   if(code === this._prevCode){
-    if(this.el.innerHTML !== this._prevHTML) this.el.innerHTML = this._prevHTML;
+    if(this.inner.innerHTML !== this._prevHTML) setHTML = this._prevHTML;
   }else{
-    this._prevHTML = this.el.innerHTML = Prism['highlight'](code, md);
+    this._prevHTML = setHTML = Prism['highlight'](code, md);
   }
   this._prevCode = code;
   // Prism.highlightElement(this); // bit messy + unnecessary + strips leading newlines :(
 
-  if(!/\n$/.test(code)) {
-    this.el.innerHTML = this.el.innerHTML + '\n';
+  if(setHTML !== undefined){
+    if(!/\n$/.test(code)) {
+      setHTML += '\n';
+    }
+
+    var dummy = this.inner.cloneNode(false);
+    dummy.innerHTML = setHTML;
+    this.el.replaceChild(dummy, this.inner);
+    this.inner = dummy;
   }
 
   this.restoreScrollPos();
@@ -147,7 +169,7 @@ Editor.prototype.keypress = function(evt){
 
   this.undoMgr.action({
     add: chr,
-    del: start === end ? '' : this.el.textContent.slice(start, end),
+    del: start === end ? '' : this.getText().slice(start, end),
     start: start
   });
 };
@@ -164,7 +186,7 @@ Editor.prototype.keydown = function(evt){
       start = evt.keyCode === 8 ? end - length : start;
       this.undoMgr.action({
         add: '',
-        del: this.el.textContent.slice(start, start + length),
+        del: this.getText().slice(start, start + length),
         start: start
       });
       break;
@@ -214,16 +236,14 @@ Editor.prototype.keydown = function(evt){
 };
 
 Editor.prototype.apply = function(action){
-  var e = this.el;
-
-  e.textContent = spliceString(e.textContent, action.start, action.del.length, action.add);
+  this.setText(spliceString(this.getText(), action.start, action.del.length, action.add));
   this.selMgr.setRange(action.start, action.start + action.add.length);
   this.changed();
 };
 
 Editor.prototype.action = function(act, opts){
   opts = opts || {};
-  var text = this.el.textContent;
+  var text = this.getText();
   var start = opts.start || this.selMgr.getStart();
   var end = opts.end || this.selMgr.getEnd();
 
@@ -239,7 +259,7 @@ Editor.prototype.action = function(act, opts){
 
   this.saveScrollPos();
 
-  this.el.textContent = state.before + state.sel + state.after;
+  this.setText(state.before + state.sel + state.after);
 
   if(a && !opts.noHistory){
     this.undoMgr.action(a);
@@ -257,7 +277,7 @@ Editor.prototype.cut = function(){
 
   this.undoMgr.action({
     add: '',
-    del: this.el.textContent.slice(start, end),
+    del: this.getText().slice(start, end),
     start: start
   });
 };
@@ -265,7 +285,7 @@ Editor.prototype.cut = function(){
 Editor.prototype.paste = function(evt){
   var start = this.selMgr.getStart();
   var end = this.selMgr.getEnd();
-  var selection = start === end ? '' : this.el.textContent.slice(start, end);
+  var selection = start === end ? '' : this.getText().slice(start, end);
 
   if(evt.clipboardData){
     evt.preventDefault();
