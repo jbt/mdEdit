@@ -862,10 +862,6 @@ Editor.prototype.keyup = function(evt){
   var keyCode = evt && evt.keyCode || 0,
       code = this.getText();
 
-  // if(keyCode < 9 || keyCode == 13 || keyCode > 32 && keyCode < 41) {
-    // $t.trigger('caretmove');
-  // }
-
   if([
     9, 91, 93, 16, 17, 18, // modifiers
     20, // caps lock
@@ -901,7 +897,6 @@ Editor.prototype.changed = function(evt){
     this._prevHTML = setHTML = Prism['highlight'](code, md);
   }
   this._prevCode = code;
-  // Prism.highlightElement(this); // bit messy + unnecessary + strips leading newlines :(
 
   if(setHTML !== undefined){
     if(!/\n$/.test(code)) {
@@ -1017,13 +1012,6 @@ Editor.prototype.keydown = function(evt){
       }
 
       break;
-    case 191:
-      // if(cmdOrCtrl && !evt.altKey) {
-      //   that.action('comment', { lang: this.id });
-      //   return false;
-      // }
-
-      break;
   }
 };
 
@@ -1079,6 +1067,20 @@ Editor.prototype.paste = function(evt){
   var end = this.selMgr.getEnd();
   var selection = start === end ? '' : this.getText().slice(start, end);
 
+  var self = this;
+
+  function applyPasted(pasted){
+    self.undoMgr.action({
+      add: pasted,
+      del: selection,
+      start: start
+    });
+
+    start += pasted.length;
+    self.selMgr.setRange(start, start);
+    self.changed();
+  }
+
   if(evt.clipboardData){
     evt.preventDefault();
 
@@ -1090,15 +1092,14 @@ Editor.prototype.paste = function(evt){
       start: start
     });
 
-    this.undoMgr.action({
-      add: pasted,
-      del: selection,
-      start: start
-    });
+    applyPasted(pasted);
+  }else{
+    // handle IE9 with no clipboardData. Flickers a bit if styles have changed :(
+    setTimeout(function(){
+      var newEnd = self.selMgr.getEnd();
 
-    start += pasted.length;
-    this.selMgr.setRange(start, start);
-    this.changed();
+      applyPasted(self.getText().slice(start, newEnd));
+    }, 0);
   }
 };
 
