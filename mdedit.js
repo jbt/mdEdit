@@ -821,7 +821,7 @@ function Editor(el, opts){
   evt.bind(el, 'cut', this.cut.bind(this));
   evt.bind(el, 'paste', this.paste.bind(this));
   evt.bind(el, 'keyup', this.keyup.bind(this));
-  evt.bind(el, 'input', this.changed.bind(this));
+  evt.bind(el, 'input', this.changedDelay.bind(this));
   evt.bind(el, 'keydown', this.keydown.bind(this));
   evt.bind(el, 'keypress', this.keypress.bind(this));
 
@@ -877,11 +877,19 @@ Editor.prototype.keyup = function(evt){
     35, 36, // End, Home
     37, 39, 38, 40 // Left, Right, Up, Down
   ].indexOf(keyCode) === -1) {
-    this.changed();
+    this.changedDelay();
   }
 };
 
-Editor.prototype.changed = function(evt){
+Editor.prototype.changedDelay = function(/*evt*/){
+  if (!this._changedDelayFunc)
+    this._changedDelayFunc = this.changed.bind(this);
+  clearTimeout(this._changedDelayLast);
+  this._changedDelayLast = setTimeout(this._changedDelayFunc, 200/*, evt*/);
+}
+
+Editor.prototype.changed = function(/*evt*/){
+  clearTimeout(this._changedDelayLast);
   var code = this.getText();
 
   var ss = this.selMgr.getStart(),
