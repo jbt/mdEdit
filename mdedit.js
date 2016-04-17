@@ -860,6 +860,13 @@ Editor.prototype.setText = function(val){
 
 Editor.prototype.keyup = function(evt){
   var keyCode = evt && evt.keyCode || 0;
+  var ctrl = evt.ctrlKey || evt.altKey || evt.metaKey;
+
+  if(ctrl) return;
+
+  //var code = evt.charCode;
+
+  //if(!code) return;
 
   if([
     9, 91, 93, 16, 17, 18, // modifiers
@@ -939,7 +946,7 @@ Editor.prototype.restoreScrollPos = function(){
 
 
 Editor.prototype.keypress = function(evt){
-  var ctrl = evt.ctrlKey || evt.metaKey;
+  var ctrl = evt.ctrlKey || evt.altKey || evt.metaKey;
 
   if(ctrl) return;
 
