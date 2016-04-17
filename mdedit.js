@@ -897,6 +897,8 @@ Editor.prototype.changedDelay = function(/*evt*/){
 Editor.prototype.changed = function(/*evt*/){
   clearTimeout(this._changedDelayLast);
   var code = this.getText();
+  if(code === this._prevCode)
+    return;
 
   var ss = this.selMgr.getStart(),
     se = this.selMgr.getEnd();
