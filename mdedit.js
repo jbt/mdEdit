@@ -940,7 +940,7 @@ Editor.prototype.restoreScrollPos = function(){
 
 
 Editor.prototype.keypress = function(evt){
-  var ctrl = evt.metaKey || evt.ctrlKey;
+  var ctrl = evt.ctrlKey || evt.metaKey;
 
   if(ctrl) return;
 
@@ -970,7 +970,7 @@ Editor.prototype.keypress = function(evt){
 };
 
 Editor.prototype.keydown = function(evt){
-  var cmdOrCtrl = evt.metaKey || evt.ctrlKey;
+  var cmdOrCtrl = evt.ctrlKey || evt.metaKey;
 
   switch(evt.keyCode) {
     case 8: // Backspace
