@@ -821,7 +821,7 @@ function Editor(el, opts){
   evt.bind(el, 'cut', this.cut.bind(this));
   evt.bind(el, 'paste', this.paste.bind(this));
   evt.bind(el, 'keyup', this.keyup.bind(this));
-  evt.bind(el, 'input', this.changed.bind(this));
+  evt.bind(el, 'input', this.changedDelay.bind(this));
   evt.bind(el, 'keydown', this.keydown.bind(this));
   evt.bind(el, 'keypress', this.keypress.bind(this));
 
@@ -859,8 +859,14 @@ Editor.prototype.setText = function(val){
 };
 
 Editor.prototype.keyup = function(evt){
-  var keyCode = evt && evt.keyCode || 0,
-      code = this.getText();
+  var keyCode = evt && evt.keyCode || 0;
+  var ctrl = evt.ctrlKey || evt.altKey || evt.metaKey;
+
+  if(ctrl) return;
+
+  //var code = evt.charCode;
+
+  //if(!code) return;
 
   if([
     9, 91, 93, 16, 17, 18, // modifiers
@@ -877,12 +883,22 @@ Editor.prototype.keyup = function(evt){
     35, 36, // End, Home
     37, 39, 38, 40 // Left, Right, Up, Down
   ].indexOf(keyCode) === -1) {
-    this.changed();
+    this.changedDelay();
   }
 };
 
-Editor.prototype.changed = function(evt){
+Editor.prototype.changedDelay = function(/*evt*/){
+  if (!this._changedDelayFunc)
+    this._changedDelayFunc = this.changed.bind(this);
+  clearTimeout(this._changedDelayLast);
+  this._changedDelayLast = setTimeout(this._changedDelayFunc, 200/*, evt*/);
+}
+
+Editor.prototype.changed = function(/*evt*/){
+  clearTimeout(this._changedDelayLast);
   var code = this.getText();
+  if(code === this._prevCode)
+    return;
 
   var ss = this.selMgr.getStart(),
     se = this.selMgr.getEnd();
@@ -932,7 +948,7 @@ Editor.prototype.restoreScrollPos = function(){
 
 
 Editor.prototype.keypress = function(evt){
-  var ctrl = evt.metaKey || evt.ctrlKey;
+  var ctrl = evt.ctrlKey || evt.altKey || evt.metaKey;
 
   if(ctrl) return;
 
@@ -962,7 +978,7 @@ Editor.prototype.keypress = function(evt){
 };
 
 Editor.prototype.keydown = function(evt){
-  var cmdOrCtrl = evt.metaKey || evt.ctrlKey;
+  var cmdOrCtrl = evt.ctrlKey || evt.metaKey;
 
   switch(evt.keyCode) {
     case 8: // Backspace
