@@ -434,6 +434,11 @@ function spliceString(str, i, remove, add){
   return str.slice(0,i) + add + str.slice(i+remove);
 }
 
+
+function normalizeLine(str){
+  return str.replace(/\r(\n)?/g, '\n');
+}
+
 var actions = {
   'newline': function(state, options){
     var s = state.start;
@@ -855,6 +860,7 @@ Editor.prototype.getText = function(){
 };
 
 Editor.prototype.setText = function(val){
+  val = normalizeLine(val);
   this.inner.textContent = val;
 };
 
@@ -1085,6 +1091,7 @@ Editor.prototype.paste = function(evt){
     evt.preventDefault();
 
     var pasted = evt.clipboardData.getData('text/plain');
+    pasted = normalizeLine(pasted);
 
     this.apply({
       add: pasted,
