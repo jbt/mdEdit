@@ -859,8 +859,7 @@ Editor.prototype.setText = function(val){
 };
 
 Editor.prototype.keyup = function(evt){
-  var keyCode = evt && evt.keyCode || 0,
-      code = this.getText();
+  var keyCode = evt && evt.keyCode || 0;
 
   if([
     9, 91, 93, 16, 17, 18, // modifiers
