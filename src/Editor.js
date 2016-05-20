@@ -289,11 +289,15 @@ Editor.prototype.paste = function(evt){
     self.selMgr.setRange(start, start);
     self.changed();
   }
+  
+  var insert = typeof evt == 'string';
+  
+  if(insert || evt.clipboardData){
+    if (!insert) {
+      evt.preventDefault();
+    }
 
-  if(evt.clipboardData){
-    evt.preventDefault();
-
-    var pasted = evt.clipboardData.getData('text/plain');
+    var pasted = insert ? evt : evt.clipboardData.getData('text/plain');
 
     this.apply({
       add: pasted,
@@ -310,4 +314,5 @@ Editor.prototype.paste = function(evt){
       applyPasted(self.getText().slice(start, newEnd));
     }, 0);
   }
+
 };
