@@ -11,3 +11,7 @@ function spliceString(str, i, remove, add){
 
   return str.slice(0,i) + add + str.slice(i+remove);
 }
+
+function normalizeLineEnd(str){
+  return str.replace(/\r(\n)?/g, '\n');
+}
