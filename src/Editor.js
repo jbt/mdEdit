@@ -1,5 +1,5 @@
 function Editor(el, opts){
-
+  
   if(!(this instanceof Editor)){
     return new Editor(el, opts);
   }
@@ -64,7 +64,7 @@ Editor.prototype.getText = function(){
 };
 
 Editor.prototype.setText = function(val){
-  this.inner.textContent = val;
+  this.inner.textContent = normalizeLineEnd(val);
 };
 
 Editor.prototype.keyup = function(evt){
@@ -294,6 +294,7 @@ Editor.prototype.paste = function(evt){
     evt.preventDefault();
 
     var pasted = evt.clipboardData.getData('text/plain');
+    pasted = normalizeLineEnd(pasted);
 
     this.apply({
       add: pasted,
